@@ -1,0 +1,8 @@
+#game-wrapper {
+	max-width: 640px;
+}
+
+canvas {
+	box-sizing: content-box;
+	width: 100%;
+}

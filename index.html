@@ -3,24 +3,77 @@
 	<head>
 		<title>Sand Game</title>
 		<meta charset="utf-8" />
-		<!--link rel="stylesheet" href="style.css" /-->
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<!-- SEO -->
+		<meta name="application-name" content="Sand Game" />
+		<meta name="author" content="Kyle Amoroso" />
+		<meta name="description" content="A sand-box game that lets you play with different particles" />
+		<meta name="keywords" content="sand,sand-box,game,html5" />
+		<meta name="version" content="1.0" />
+		<meta property="og:title" content="Sand Game" />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://kamoroso94.github.io/sand-game/" />
+		<!-- meta property="og:image" content="https://kamoroso94.github.io/sand-game/images/splash.png" / -->
+		<meta property="og:description" content="A sand-box game that lets you play with different particles" />
+
+		<!-- Favicons -->
+		<!-- link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+		<link rel="icon" type="image/png" href="icons/favicon-16.png" />
+		<link rel="icon" type="image/png" href="icons/favicon-32.png" />
+		<link rel="icon" type="image/png" href="icons/favicon-64.png" />
+		<link rel="icon" type="image/png" href="icons/favicon-128.png" / -->
+
+		<!-- Bootstrap + JQuery -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+		<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+		<!-- Custom -->
+		<link rel="stylesheet" href="style.css" />
 		<script src="main.js"></script>
 	</head>
 
 	<body>
-		<h1>Sand Game</h1>
-		<canvas width="640" height="480" id="game"></canvas>
-		<form id="controls">
-			<input type="range" value="5" min="1" max="10" title="5" id="radius" />
-			<select id="pen">
-				<option value="air">ERASE</option>
-				<option value="ground" selected>GROUND</option>
-				<option value="sand">SAND</option>
-				<option value="water">WATER</option>
-				<option value="sand-spout">SAND-SPOUT</option>
-				<option value="water-spout">WATER-SPOUT</option>
-			</select>
-			<button id="clear">Clear</button>
-		</form>
+		<div class="container">
+			<h1>Sand Game</h1>
+			<p class="lead">A sand-box game that lets you play with different particles</p>
+
+			<div id="game-wrapper">
+				<canvas width="640" height="480" class="img-thumbnail" id="game"></canvas>
+
+				<form id="controls">
+					<div class="row">
+						<div class="col-sm-6">
+							<div class="form-group">
+								<label for="radius">Pen Radius:</label>
+								<input type="range" value="5" min="1" max="10" title="5" id="radius" />
+							</div>
+						</div>
+						<div class="col-sm-6">
+							<div class="from-group">
+								<label for="pen">Pen Type:</label>
+								<select id="pen">
+									<option value="air">ERASE</option>
+									<option value="ground" selected>GROUND</option>
+									<option value="sand">SAND</option>
+									<option value="water">WATER</option>
+									<option value="sand-spout">SAND-SPOUT</option>
+									<option value="water-spout">WATER-SPOUT</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<button type="button" class="btn" id="clear">Clear</button>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+
+			<footer>
+				<p class="small">Made by Kyle Amoroso in 2017.</p>
+			</footer>
+		</div>
 	</body>
 </html>
