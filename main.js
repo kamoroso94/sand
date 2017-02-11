@@ -1,8 +1,8 @@
 "use strict";
 
 /* TODO:
-	add gui, other particles
-	clamp pen to edges, don't pull up
+	add other particles
+	add touch support
 */
 
 let canvas, ctx, grid, drawId, tickId, lastDraw, lastTick;
@@ -22,12 +22,12 @@ window.addEventListener("load", e => {
 	ctx = canvas.getContext("2d");
 
 	canvas.addEventListener("mousedown", e => {
+		e.preventDefault();
+
 		const bcr = canvas.getBoundingClientRect();
 		pen.x = Math.floor((e.clientX - bcr.left) / Cell.size);
 		pen.y = Math.floor((e.clientY - bcr.top) / Cell.size);
 		pen.isDown = true;
-
-		e.preventDefault();
 	});
 
 	document.addEventListener("mousemove", e => {
@@ -44,9 +44,10 @@ window.addEventListener("load", e => {
 	});
 
 	const radiusTag = document.getElementById("radius");
-	radiusTag.addEventListener("change", e => {
+	radiusTag.addEventListener("input", e => {
 		pen.radius = parseInt(radiusTag.value);
 		radiusTag.title = pen.radius;
+		document.getElementById("radiusVal").textContent = pen.radius;
 	});
 
 	const penTag = document.getElementById("pen");
@@ -54,8 +55,9 @@ window.addEventListener("load", e => {
 		pen.currentId = penTag.value;
 	});
 
-	const clearBtn = document.getElementById("clear");
-	clearBtn.addEventListener("clear", e => {
+	const formTag = document.getElementById("controls");
+	formTag.addEventListener("reset", e => {
+		e.preventDefault();
 		resetGrid();
 	});
 

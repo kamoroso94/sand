@@ -8,14 +8,14 @@
 		<!-- SEO -->
 		<meta name="application-name" content="Sand Game" />
 		<meta name="author" content="Kyle Amoroso" />
-		<meta name="description" content="A sand-box game that lets you play with different particles" />
+		<meta name="description" content="A sand-box game that lets you play with different elements" />
 		<meta name="keywords" content="sand,sand-box,game,html5" />
 		<meta name="version" content="1.0" />
 		<meta property="og:title" content="Sand Game" />
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content="https://kamoroso94.github.io/sand-game/" />
-		<!-- meta property="og:image" content="https://kamoroso94.github.io/sand-game/images/splash.png" / -->
-		<meta property="og:description" content="A sand-box game that lets you play with different particles" />
+		<meta property="og:image" content="https://kamoroso94.github.io/sand-game/images/splash.png" />
+		<meta property="og:description" content="A sand-box game that lets you play with different elements" />
 
 		<!-- Favicons -->
 		<!-- link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
@@ -38,7 +38,7 @@
 	<body>
 		<div class="container">
 			<h1>Sand Game</h1>
-			<p class="lead">A sand-box game that lets you play with different particles</p>
+			<p class="lead">A sand-box game that lets you play with different elements</p>
 
 			<div id="game-wrapper">
 				<canvas width="640" height="480" class="img-thumbnail" id="game"></canvas>
@@ -48,6 +48,7 @@
 						<div class="col-sm-6">
 							<div class="form-group">
 								<label for="radius">Pen Radius:</label>
+								<span id="radiusVal">5</span>
 								<input type="range" value="5" min="1" max="10" title="5" id="radius" />
 							</div>
 						</div>
@@ -64,7 +65,7 @@
 								</select>
 							</div>
 							<div class="form-group">
-								<button type="button" class="btn" id="clear">Clear</button>
+								<button type="reset" class="btn">Clear</button>
 							</div>
 						</div>
 					</div>
