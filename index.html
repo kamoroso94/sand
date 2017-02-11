@@ -3,12 +3,24 @@
 	<head>
 		<title>Sand Game</title>
 		<meta charset="utf-8" />
-		<!-- link rel="stylesheet" href="style.css" / -->
+		<!--link rel="stylesheet" href="style.css" /-->
 		<script src="main.js"></script>
 	</head>
 
 	<body>
 		<h1>Sand Game</h1>
 		<canvas width="640" height="480" id="game"></canvas>
+		<form id="controls">
+			<input type="range" value="5" min="1" max="10" title="5" id="radius" />
+			<select id="pen">
+				<option value="air">ERASE</option>
+				<option value="ground" selected>GROUND</option>
+				<option value="sand">SAND</option>
+				<option value="water">WATER</option>
+				<option value="sand-spout">SAND-SPOUT</option>
+				<option value="water-spout">WATER-SPOUT</option>
+			</select>
+			<button id="clear">Clear</button>
+		</form>
 	</body>
 </html>
