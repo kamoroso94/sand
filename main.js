@@ -1,46 +1,89 @@
 "use strict";
 
 /* TODO:
-	add other particles
-	add touch support
+	add more cell types
 */
 
 let canvas, ctx, grid, drawId, tickId, lastDraw, lastTick;
 const TPS = 30;
-const pen = {
-	x: -1,
-	y: -1,
-	prevX: -1,
-	prevY: -1,
-	radius: 5,
-	currentId: "ground",
-	isDown: false
-};
+const pen = new Pen();
 
-window.addEventListener("load", e => {
+window.addEventListener("load", event => {
 	canvas = document.getElementById("game");
 	ctx = canvas.getContext("2d");
 
-	canvas.addEventListener("mousedown", e => {
-		e.preventDefault();
+	canvas.addEventListener("mousedown", event => {
+		event.preventDefault();
 
 		const bcr = canvas.getBoundingClientRect();
-		pen.x = Math.floor((e.clientX - bcr.left) / Cell.size);
-		pen.y = Math.floor((e.clientY - bcr.top) / Cell.size);
-		pen.isDown = true;
+		const x = Math.floor((event.clientX - bcr.left) / Cell.size);
+		const y = Math.floor((event.clientY - bcr.top) / Cell.size);
+
+		pen.down(x, y);
 	});
 
-	document.addEventListener("mousemove", e => {
+	document.addEventListener("mousemove", event => {
 		const bcr = canvas.getBoundingClientRect();
-		pen.x = clamp(Math.floor((e.clientX - bcr.left) / Cell.size), 0, canvas.width / Cell.size);
-		pen.y = clamp(Math.floor((e.clientY - bcr.top) / Cell.size), 0, canvas.height / Cell.size);
+		const x = clamp(Math.floor((event.clientX - bcr.left) / Cell.size), 0, canvas.width / Cell.size);
+		const y = clamp(Math.floor((event.clientY - bcr.top) / Cell.size), 0, canvas.height / Cell.size);
+
+		pen.move(x, y);
 	});
 
-	document.addEventListener("mouseup", e => {
+	document.addEventListener("mouseup", event => {
 		const bcr = canvas.getBoundingClientRect();
-		pen.x = clamp(Math.floor((e.clientX - bcr.left) / Cell.size), 0, canvas.width / Cell.size);
-		pen.y = clamp(Math.floor((e.clientY - bcr.top) / Cell.size), 0, canvas.height / Cell.size);
-		pen.isDown = false;
+		const x = clamp(Math.floor((event.clientX - bcr.left) / Cell.size), 0, canvas.width / Cell.size);
+		const y = clamp(Math.floor((event.clientY - bcr.top) / Cell.size), 0, canvas.height / Cell.size);
+
+		pen.up(x, y);
+	});
+
+	canvas.addEventListener("touchstart", event => {
+		event.preventDefault();
+
+		if(pen.isDown) {
+			return;
+		}
+
+		const touch = event.changedTouches[0];
+		const bcr = canvas.getBoundingClientRect();
+		const x = Math.floor((touch.clientX - bcr.left) / Cell.size);
+		const y = Math.floor((touch.clientY - bcr.top) / Cell.size);
+
+		pen.touchId = touch.identifier;
+		pen.down(x, y);
+	});
+
+	canvas.addEventListener("touchmove", event => {
+		event.preventDefault();
+
+		const touch = getTouch(pen.touchId, event.changedTouches);
+
+		if(!pen.isDown || touch == null) {
+			return;
+		}
+
+		const bcr = canvas.getBoundingClientRect();
+		const x = clamp(Math.floor((touch.clientX - bcr.left) / Cell.size), 0, canvas.width / Cell.size);
+		const y = clamp(Math.floor((touch.clientY - bcr.top) / Cell.size), 0, canvas.height / Cell.size);
+
+		pen.move(x, y);
+	});
+
+	canvas.addEventListener("touchend", event => {
+		event.preventDefault();
+
+		const touch = getTouch(pen.touchId, event.changedTouches);
+
+		if(!pen.isDown || touch == null) {
+			return;
+		}
+
+		const bcr = canvas.getBoundingClientRect();
+		const x = clamp(Math.floor((touch.clientX - bcr.left) / Cell.size), 0, canvas.width / Cell.size);
+		const y = clamp(Math.floor((touch.clientY - bcr.top) / Cell.size), 0, canvas.height / Cell.size);
+
+		pen.up(x, y);
 	});
 
 	const radiusTag = document.getElementById("radius");
@@ -105,7 +148,7 @@ function tick() {
 
 	// pen
 	if(pen.isDown) {
-		if(pen.prevX >= 0 && pen.prevY >= 0) {
+		if(pen.hasPrevious()) {
 			const dx = pen.x - pen.prevX;
 			const dy = pen.y - pen.prevY;
 			const dist = Math.hypot(dx, dy);
@@ -135,8 +178,7 @@ function tick() {
 		}
 	}
 
-	pen.prevX = pen.x;
-	pen.prevY = pen.y;
+	pen.setPrevious(pen.x, pen.y);
 
 	const visited = new Set();
 
@@ -222,147 +264,14 @@ function clamp(value, min, max) {
 	return Math.max(min, Math.min(value, max));
 }
 
-class Grid {
-	constructor(width, height) {
-		this.width = width;
-		this.height = height;
-		this.array = new Array(width * height);
-	}
+function getTouch(id, touchList) {
+	for(let i = 0; i < touchList.length; i++) {
+		const touch = touchList.item(i);
 
-	get(x, y) {
-		return this.hasPoint(x, y) ? this.array[x + y * this.width] : undefined;
-	}
-
-	set(x, y, value) {
-		if(this.hasPoint(x, y)) {
-			this.array[x + y * this.width] = value;
+		if(touch.identifier == id) {
+			return touch;
 		}
 	}
 
-	fill(value) {
-		for(let i = 0; i < this.array.length; i++) {
-			this.array[i] = value;
-		}
-	}
-
-	clear() {
-		this.fill(undefined);
-	}
-
-	hasPoint(x, y) {
-		return x >= 0 && x < this.width && y >= 0 && y < this.height;
-	}
+	return null;
 }
-
-class Cell {
-	static get size() {
-		return 4;
-	}
-
-	constructor(x, y) {
-		this.x = x;
-		this.y = y;
-		this.dir = 1;
-	}
-}
-
-class Air extends Cell {
-	constructor(x, y) {
-		super(x, y);
-		this.color = "#000000";
-		this.gravity = false;
-		this.density = 0;
-		this.spawn = null;
-	}
-}
-
-class Ground extends Cell {
-	constructor(x, y) {
-		super(x, y);
-		this.color = "#aa8820";
-		this.gravity = false;
-		this.density = 3;
-		this.spawn = null;
-	}
-}
-
-class Sand extends Cell {
-	constructor(x, y) {
-		super(x, y);
-		this.color = "#eecc80";
-		this.gravity = true;
-		this.density = 2;
-		this.spawn = null;
-	}
-}
-
-class Water extends Cell {
-	constructor(x, y) {
-		super(x, y);
-		this.color = "#2020fe";
-		this.gravity = true;
-		this.density = 1;
-		this.spawn = null;
-	}
-}
-
-class SandSpout extends Cell {
-	constructor(x, y) {
-		super(x, y);
-		this.color = "#edb744";
-		this.gravity = false;
-		this.density = 3;
-		this.spawn = "sand";
-	}
-}
-
-class WaterSpout extends Cell {
-	constructor(x, y) {
-		super(x, y);
-		this.color = "#70a0ff";
-		this.gravity = false;
-		this.density = 3;
-		this.spawn = "water";
-	}
-}
-
-class CellFactory {
-	static create(x, y, id) {
-		switch(id) {
-			case "air":
-			return new Air(x, y);
-			break;
-
-			case "ground":
-			return new Ground(x, y);
-			break;
-
-			case "sand":
-			return new Sand(x, y);
-			break;
-
-			case "water":
-			return new Water(x, y);
-			break;
-
-			case "sand-spout":
-			return new SandSpout(x, y);
-			break;
-
-			case "water-spout":
-			return new WaterSpout(x, y);
-			break;
-
-			default:
-			return null;
-		}
-	}
-}
-/*Cell.DATA = {
-	"air": {color: "#000000", gravity: false, density: 0, spawn: null},
-	"ground": {color: "#aa8820", gravity: false, density: 3, spawn: null},
-	"sand": {color: "#eecc80", gravity: true, density: 2, spawn: null},
-	"water": {color: "#2020fe", gravity: true, density: 1, spawn: null},
-	"sand-spout": {color: "#edb744", gravity: false, density: 3, spawn: "sand"},
-	"water-spout": {color: "#70a0ff", gravity: false, density: 3, spawn: "water"}
-};*/
