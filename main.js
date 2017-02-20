@@ -47,8 +47,8 @@ window.addEventListener("load", event => {
 
 		const touch = event.changedTouches[0];
 		const bcr = canvas.getBoundingClientRect();
-		const x = Math.floor((touch.clientX - bcr.left) / Cell.size);
-		const y = Math.floor((touch.clientY - bcr.top) / Cell.size);
+		const x = Math.floor((touch.clientX - (bcr.left + window.scrollLeft)) / Cell.size);
+		const y = Math.floor((touch.clientY - (bcr.top + window.scrollTop)) / Cell.size);
 
 		pen.touchId = touch.identifier;
 		pen.down(x, y);
@@ -64,8 +64,8 @@ window.addEventListener("load", event => {
 		}
 
 		const bcr = canvas.getBoundingClientRect();
-		const x = clamp(Math.floor((touch.clientX - bcr.left) / Cell.size), 0, canvas.width / Cell.size);
-		const y = clamp(Math.floor((touch.clientY - bcr.top) / Cell.size), 0, canvas.height / Cell.size);
+		const x = clamp(Math.floor((touch.clientX - (bcr.left + window.scrollLeft)) / Cell.size), 0, canvas.width / Cell.size);
+		const y = clamp(Math.floor((touch.clientY - (bcr.top + window.scrollTop)) / Cell.size), 0, canvas.height / Cell.size);
 
 		pen.move(x, y);
 	});
@@ -80,8 +80,8 @@ window.addEventListener("load", event => {
 		}
 
 		const bcr = canvas.getBoundingClientRect();
-		const x = clamp(Math.floor((touch.clientX - bcr.left) / Cell.size), 0, canvas.width / Cell.size);
-		const y = clamp(Math.floor((touch.clientY - bcr.top) / Cell.size), 0, canvas.height / Cell.size);
+		const x = clamp(Math.floor((touch.clientX - (bcr.left + window.scrollLeft)) / Cell.size), 0, canvas.width / Cell.size);
+		const y = clamp(Math.floor((touch.clientY - (bcr.top + window.scrollTop)) / Cell.size), 0, canvas.height / Cell.size);
 
 		pen.up(x, y);
 	});
