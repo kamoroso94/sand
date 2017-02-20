@@ -16,24 +16,24 @@ window.addEventListener("load", event => {
 		event.preventDefault();
 
 		const bcr = canvas.getBoundingClientRect();
-		const x = Math.floor((event.clientX - bcr.left) / Cell.size);
-		const y = Math.floor((event.clientY - bcr.top) / Cell.size);
+		const x = Math.floor((event.clientX - (bcr.left + window.scrollLeft)) / Cell.size);
+		const y = Math.floor((event.clientY - (bcr.top + window.scrollTop)) / Cell.size);
 
 		pen.down(x, y);
 	});
 
 	document.addEventListener("mousemove", event => {
 		const bcr = canvas.getBoundingClientRect();
-		const x = clamp(Math.floor((event.clientX - bcr.left) / Cell.size), 0, canvas.width / Cell.size);
-		const y = clamp(Math.floor((event.clientY - bcr.top) / Cell.size), 0, canvas.height / Cell.size);
+		const x = clamp(Math.floor((event.clientX - (bcr.left + window.scrollLeft)) / Cell.size), 0, canvas.width / Cell.size);
+		const y = clamp(Math.floor((event.clientY - (bcr.top + window.scrollTop)) / Cell.size), 0, canvas.height / Cell.size);
 
 		pen.move(x, y);
 	});
 
 	document.addEventListener("mouseup", event => {
 		const bcr = canvas.getBoundingClientRect();
-		const x = clamp(Math.floor((event.clientX - bcr.left) / Cell.size), 0, canvas.width / Cell.size);
-		const y = clamp(Math.floor((event.clientY - bcr.top) / Cell.size), 0, canvas.height / Cell.size);
+		const x = clamp(Math.floor((event.clientX - (bcr.left + window.scrollLeft)) / Cell.size), 0, canvas.width / Cell.size);
+		const y = clamp(Math.floor((event.clientY - (bcr.top + window.scrollTop)) / Cell.size), 0, canvas.height / Cell.size);
 
 		pen.up(x, y);
 	});
