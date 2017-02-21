@@ -4,14 +4,18 @@
 
 class Pen {
 	constructor() {
+		this.reset();
+	}
+
+	reset() {
 		this.x = -1;
 		this.y = -1;
 		this.prevX = -1;
 		this.prevY = -1;
 		this.isDown = false;
 		this.touchId = -1;
-		this.radius = 5;
 		this.currentId = "ground";
+		this.radius = 5;
 	}
 
 	down(x, y) {

@@ -44,32 +44,23 @@
 			<div id="game-wrapper">
 				<canvas width="640" height="480" class="img-thumbnail" id="game"></canvas>
 
-				<form id="controls">
-					<div class="row">
-						<div class="col-sm-6">
-							<div class="form-group">
-								<label for="radius">Pen Radius:</label>
-								<span id="radiusVal">5</span>
-								<input type="range" value="5" min="1" max="10" title="5" id="radius" />
-							</div>
-						</div>
-						<div class="col-sm-6">
-							<div class="from-group">
-								<label for="pen">Pen Type:</label>
-								<select id="pen">
-									<option value="air">ERASE</option>
-									<option value="ground" selected>GROUND</option>
-									<option value="sand">SAND</option>
-									<option value="water">WATER</option>
-									<option value="sand-spout">SAND-SPOUT</option>
-									<option value="water-spout">WATER-SPOUT</option>
-								</select>
-							</div>
-							<div class="form-group">
-								<button type="reset" class="btn">Clear</button>
-							</div>
-						</div>
+				<form class="form-inline" id="controls">
+					<div class="form-group">
+						<label for="radius">Pen Radius:</label>
+						<input type="range" class="form-control" id="radius" value="5" min="1" max="10" step="1" />
 					</div>
+					<div class="form-group">
+						<label for="pen">Pen Type:</label>
+						<select class="form-control" id="pen">
+							<option value="air">Erase</option>
+							<option value="ground" selected>Ground</option>
+							<option value="sand">Sand</option>
+							<option value="water">Water</option>
+							<option value="sand-spout">Sand Spout</option>
+							<option value="water-spout">Water Spout</option>
+						</select>
+					</div>
+					<button type="reset" class="btn btn-default">Clear</button>
 				</form>
 			</div>
 

@@ -79,10 +79,15 @@ window.addEventListener("load", event => {
 	});
 
 	const radiusTag = document.getElementById("radius");
+	$(radiusTag).popover({
+		content: pen.radius,
+		placement: "auto bottom",
+		trigger: "hover"
+	});
 	radiusTag.addEventListener("input", event => {
 		pen.radius = parseInt(radiusTag.value);
-		radiusTag.title = pen.radius;
-		document.getElementById("radiusVal").textContent = pen.radius;
+		radiusTag.setAttribute("data-content", pen.radius);
+		$(radiusTag).popover("show");
 	});
 
 	const penTag = document.getElementById("pen");
@@ -92,7 +97,8 @@ window.addEventListener("load", event => {
 
 	const formTag = document.getElementById("controls");
 	formTag.addEventListener("reset", event => {
-		event.preventDefault();
+		pen.reset();
+		radiusTag.setAttribute("data-content", pen.radius);
 		resetGrid();
 	});
 
