@@ -74,7 +74,7 @@ class Grid {
 }
 
 class Cell {
-	static get size() {
+	static get SIZE() {
 		return 4;
 	}
 

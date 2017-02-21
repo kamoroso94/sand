@@ -12,29 +12,31 @@ window.addEventListener("load", event => {
 	canvas = document.getElementById("game");
 	ctx = canvas.getContext("2d");
 
+	const translateCoords = ({clientX, clientY}) => {
+		const bcr = canvas.getBoundingClientRect();
+		const gridWidth = canvas.width / Cell.SIZE;
+		const gridHeight = canvas.height / Cell.SIZE;
+		const scaleX = gridWidth / bcr.width;
+		const scaleY = gridHeight / bcr.height;
+		const x = clamp(Math.floor((clientX - bcr.left) * scaleX), 0, gridWidth);
+		const y = clamp(Math.floor((clientY - bcr.top) * scaleY), 0, gridHeight);
+
+		return {x, y};
+	};
+
 	canvas.addEventListener("mousedown", event => {
 		event.preventDefault();
-
-		const bcr = canvas.getBoundingClientRect();
-		const x = Math.floor((event.clientX - (bcr.left + window.scrollX)) / Cell.size);
-		const y = Math.floor((event.clientY - (bcr.top + window.scrollY)) / Cell.size);
-
+		const {x, y} = translateCoords(event);
 		pen.down(x, y);
 	});
 
 	document.addEventListener("mousemove", event => {
-		const bcr = canvas.getBoundingClientRect();
-		const x = clamp(Math.floor((event.clientX - (bcr.left + window.scrollX)) / Cell.size), 0, canvas.width / Cell.size);
-		const y = clamp(Math.floor((event.clientY - (bcr.top + window.scrollY)) / Cell.size), 0, canvas.height / Cell.size);
-
+		const {x, y} = translateCoords(event);
 		pen.move(x, y);
 	});
 
 	document.addEventListener("mouseup", event => {
-		const bcr = canvas.getBoundingClientRect();
-		const x = clamp(Math.floor((event.clientX - (bcr.left + window.scrollX)) / Cell.size), 0, canvas.width / Cell.size);
-		const y = clamp(Math.floor((event.clientY - (bcr.top + window.scrollY)) / Cell.size), 0, canvas.height / Cell.size);
-
+		const {x, y} = translateCoords(event);
 		pen.up(x, y);
 	});
 
@@ -45,10 +47,8 @@ window.addEventListener("load", event => {
 			return;
 		}
 
-		const touch = event.changedTouches[0];
-		const bcr = canvas.getBoundingClientRect();
-		const x = Math.floor((touch.clientX - (bcr.left + window.scrollX)) / Cell.size);
-		const y = Math.floor((touch.clientY - (bcr.top + window.scrollY)) / Cell.size);
+		const [touch] = event.changedTouches;
+		const {x, y} = translateCoords(touch);
 
 		pen.touchId = touch.identifier;
 		pen.down(x, y);
@@ -58,15 +58,11 @@ window.addEventListener("load", event => {
 		event.preventDefault();
 
 		const touch = getTouch(pen.touchId, event.changedTouches);
-
 		if(!pen.isDown || touch == null) {
 			return;
 		}
 
-		const bcr = canvas.getBoundingClientRect();
-		const x = clamp(Math.floor((touch.clientX - (bcr.left + window.scrollX)) / Cell.size), 0, canvas.width / Cell.size);
-		const y = clamp(Math.floor((touch.clientY - (bcr.top + window.scrollY)) / Cell.size), 0, canvas.height / Cell.size);
-
+		const {x, y} = translateCoords(touch);
 		pen.move(x, y);
 	});
 
@@ -74,33 +70,29 @@ window.addEventListener("load", event => {
 		event.preventDefault();
 
 		const touch = getTouch(pen.touchId, event.changedTouches);
-
 		if(!pen.isDown || touch == null) {
 			return;
 		}
 
-		const bcr = canvas.getBoundingClientRect();
-		const x = clamp(Math.floor((touch.clientX - (bcr.left + window.scrollX)) / Cell.size), 0, canvas.width / Cell.size);
-		const y = clamp(Math.floor((touch.clientY - (bcr.top + window.scrollY)) / Cell.size), 0, canvas.height / Cell.size);
-
+		const {x, y} = translateCoords(touch);
 		pen.up(x, y);
 	});
 
 	const radiusTag = document.getElementById("radius");
-	radiusTag.addEventListener("input", e => {
+	radiusTag.addEventListener("input", event => {
 		pen.radius = parseInt(radiusTag.value);
 		radiusTag.title = pen.radius;
 		document.getElementById("radiusVal").textContent = pen.radius;
 	});
 
 	const penTag = document.getElementById("pen");
-	penTag.addEventListener("change", e => {
+	penTag.addEventListener("change", event => {
 		pen.currentId = penTag.value;
 	});
 
 	const formTag = document.getElementById("controls");
-	formTag.addEventListener("reset", e => {
-		e.preventDefault();
+	formTag.addEventListener("reset", event => {
+		event.preventDefault();
 		resetGrid();
 	});
 
@@ -108,7 +100,7 @@ window.addEventListener("load", event => {
 });
 
 function init() {
-	grid = new Grid(canvas.width / Cell.size, canvas.height / Cell.size);
+	grid = new Grid(canvas.width / Cell.SIZE, canvas.height / Cell.SIZE);
 	resetGrid();
 
 	lastDraw = Date.now();
@@ -134,7 +126,7 @@ function draw(/* timestamp */) {
 			}
 
 			ctx.fillStyle = cell.color;
-			ctx.fillRect(Cell.size * cell.x, Cell.size * cell.y, Cell.size, Cell.size);
+			ctx.fillRect(Cell.SIZE * cell.x, Cell.SIZE * cell.y, Cell.SIZE, Cell.SIZE);
 		}
 	}
 
