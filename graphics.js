@@ -1,5 +1,12 @@
 "use strict";
 
+class Point {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
 function drawHorizontal(x1, x2, y, setPixel) {
     [x1, x2, y] = [x1, x2, y].map(v => Math.floor(v));
 
@@ -8,98 +15,63 @@ function drawHorizontal(x1, x2, y, setPixel) {
     }
 }
 
-class Point {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
+// https://youtu.be/q8bEoSn4KZk
+function fillPolygon(points, setPixel) {
+    let minY, maxY;
+    minY = maxY = points[0].y;
 
-    static comparator(p1, p2) {
-        return p1.y == p2.y ? p1.x - p2.x : p1.y - p2.y;
-    }
-}
+    points.forEach(p => {
+        minY = Math.min(minY, p.y);
+        maxY = Math.max(p.y, maxY);
+    });
 
-// http://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
-class Triangle {
-    /*  1   1 2
-     * 2 3   3
-     */
-    constructor(p1, p2, p3) {
-        [p1, p2, p3] = [p1, p2, p3].sort(Point.comparator);
-        this.p1 = p1;
-        this.p2 = p2;
-        this.p3 = p3;
-    }
+    for(let y of range(minY, maxY)) {
+        let row = [];
+        let p1 = points[points.length - 1];
 
-    fill(setPixel) {
-        if (this.hasFlatEdge()) {
-            Triangle.fillFlatEdge(this.p1, this.p2, this.p3, setPixel);
-        } else {
-            const p4 = new Point(map(this.p2.y, this.p1.y, this.p3.y, this.p1.x, this.p3.x), this.p2.y);
-            Triangle.fillFlatEdge(this.p1, this.p2, p4, setPixel);
-            Triangle.fillFlatEdge(this.p2, p4, this.p3, setPixel);
-        }
-    }
-
-    hasFlatEdge() {
-        return this.p1.y == this.p2.y || this.p2.y == this.p3.y;
-    }
-
-    static fillFlatEdge(p1, p2, p3, setPixel) {
-        [p1, p2, p3] = [p1, p2, p3].sort(Point.comparator);
-
-        const isBottomFlat = p1.y < p2.y;
-        const point = isBottomFlat ? p1 : p3;
-        const base = {
-            left: isBottomFlat ? p2 : p1,
-            right: isBottomFlat ? p3 : p2
-        };
-        let leftX = point.x;
-        let rightX = point.x;
-
-        for(let y of range(point.y, base.left.y)) {
-            drawHorizontal(leftX, rightX, y, setPixel);
-            leftX = map(y, point.y, base.left.y, point.x, base.left.x);
-            rightX = map(y, point.y, base.right.y, point.x, base.right.x);
-        }
-    }
-}
-
-class Circle {
-    constructor(x, y, radius) {
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
-    }
-
-    fill(setPixel) {
-        let x = 0;
-        let y = this.radius;
-        let d = 1 - this.radius;
-        let deltaE = 3;
-        let deltaSE = -2 * this.radius + 5;
-
-        while(y >= x) {
-            this.scanlines(x, y, setPixel);
-
-            if(d < 0) {
-                d += deltaE;
-                deltaSE += 2;
-            } else {
-                d += deltaSE;
-                deltaSE += 4;
-                y--;
+        points.forEach(p2 => {
+            if(p1.y <= y && y <= p2.y || p2.y <= y && y <= p1.y) {
+                row.push(map(y, p1.y, p2.y, p1.x, p2.x));
             }
+            p1 = p2;
+        });
+        row = row.sort((a, b) => a - b).filter((v, i, a) => i == 0 || v != a[i - 1]);
 
-            deltaE += 2;
-            x++;
+        for(let i = 1; i < row.length; i++) {
+            const x1 = row[i - 1];
+            const x2 = row[i];
+            drawHorizontal(x1, x2, y, setPixel);
         }
     }
+}
 
-    scanlines(x, y, setPixel) {
-        drawHorizontal(this.x - x, this.x + x, this.y + y, setPixel);
-        drawHorizontal(this.x - y, this.x + y, this.y + x, setPixel);
-        drawHorizontal(this.x - y, this.x + y, this.y - x, setPixel);
-        drawHorizontal(this.x - x, this.x + x, this.y - y, setPixel);
+// http://www.cs.mun.ca/av/old/teaching/cg/notes/raster_circ_inclass.pdf
+function fillCircle(x, y, r, setPixel) {
+    let h = 0;
+    let k = r;
+    let d = 1 - r;
+    let deltaE = 3;
+    let deltaSE = -2 * r + 5;
+    let scanCircle = (h, k) => {
+        drawHorizontal(x - h, x + h, y + k, setPixel);
+        drawHorizontal(x - k, x + k, y + h, setPixel);
+        drawHorizontal(x - k, x + k, y - h, setPixel);
+        drawHorizontal(x - h, x + h, y - k, setPixel);
+    };
+
+    while(k >= h) {
+        scanCircle(h, k);
+
+        if(d < 0) {
+            d += deltaE;
+            deltaSE += 2;
+        } else {
+            d += deltaSE;
+            deltaSE += 4;
+            k--;
+        }
+
+        deltaE += 2;
+        h++;
     }
 }
