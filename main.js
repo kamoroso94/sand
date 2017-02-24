@@ -99,7 +99,7 @@ window.addEventListener("load", event => {
 	formTag.addEventListener("reset", event => {
 		pen.reset();
 		radiusTag.setAttribute("data-content", pen.radius);
-		resetGrid();
+		resetGrid(grid);
 	});
 
 	init();
@@ -107,7 +107,7 @@ window.addEventListener("load", event => {
 
 function init() {
 	grid = new Grid(canvas.width / Cell.SIZE, canvas.height / Cell.SIZE);
-	resetGrid();
+	resetGrid(grid);
 
 	lastDraw = Date.now();
 	drawId = requestAnimationFrame(draw);
@@ -146,41 +146,14 @@ function tick() {
 
 	// pen
 	if(pen.isDown) {
-		if(pen.hasPrevious()) {
-			const dx = pen.x - pen.prevX;
-			const dy = pen.y - pen.prevY;
-			const dist = Math.hypot(dx, dy);
-			const cos = dx / dist;
-			const sin = dy / dist;
-
-			for(let h = 0; h < dist; h += 0.5) {
-				for(let k = -pen.radius; k < pen.radius; k += 0.5) {
-					const x = Math.floor(pen.prevX + h * cos - k * sin);
-					const y = Math.floor(pen.prevY + k * cos + h * sin);
-
-					grid.set(x, y, CellFactory.create(x, y, pen.currentId));
-				}
-			}
-
-		}
-
-		for(let h = -pen.radius; h < pen.radius; h++) {
-			for(let k = -pen.radius; k < pen.radius; k++) {
-				const x = Math.floor(pen.x + h);
-				const y = Math.floor(pen.y + k);
-
-				if(h ** 2 + k ** 2 < pen.radius ** 2) {
-					grid.set(x, y, CellFactory.create(x, y, pen.currentId));
-				}
-			}
-		}
+		pen.stroke(grid);
 	}
 
 	pen.setPrevious(pen.x, pen.y);
 
+	// movement
 	const visited = new Set();
 
-	// movement
 	for(let y = 0; y < grid.height; y++) {
 		for(let x = 0; x < grid.width; x++) {
 			const cell = grid.get(x, y);
@@ -250,16 +223,12 @@ function tick() {
 	tickId = setTimeout(tick, 1000 / TPS);
 }
 
-function resetGrid() {
+function resetGrid(grid) {
 	for(let x = 0; x < grid.width; x++) {
 		for(let y = 0; y < grid.height; y++)  {
 			grid.set(x, y, x == 0 || x == grid.width - 1 || y == grid.height - 1 ? new Ground(x, y) : new Air(x, y));
 		}
 	}
-}
-
-function clamp(value, min, max) {
-	return Math.max(min, Math.min(value, max));
 }
 
 function getTouch(id, touchList) {

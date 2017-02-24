@@ -1,5 +1,9 @@
 "use strict";
 
+/*
+	TODO: fix rectangle filling
+*/
+
 // class declarations
 
 class Pen {
@@ -42,6 +46,60 @@ class Pen {
 
 	hasPrevious() {
 		return this.prevX >= 0 && this.prevY >= 0;
+	}
+
+	stroke(grid) {
+		// draw rect
+		if(pen.hasPrevious()) {
+			const dx = pen.x - pen.prevX;
+			const dy = pen.y - pen.prevY;
+			const dist = Math.hypot(dx, dy);
+			const cos = dx / dist;
+			const sin = dy / dist;
+
+			/* A  C
+			 * B  D
+			 */
+			/*const cornerA = new Point(pen.prevX + pen.radius * sin, pen.prevY - pen.radius * cos);
+			const cornerB = new Point(pen.prevX - pen.radius * sin, pen.prevY + pen.radius * cos);
+			const cornerC = new Point(pen.prevX + dist * cos + pen.radius * sin, pen.prevY - pen.radius * cos + dist * sin);
+			const cornerD = new Point(pen.prevX + dist * cos - pen.radius * sin, pen.prevY + pen.radius * cos + dist * sin);
+
+			const topTriangle = new Triangle(cornerA, cornerC, cornerB);
+			const bottomTriangle = new Triangle(cornerC, cornerB, cornerD);
+
+			topTriangle.fill((x, y) => {
+				grid.set(x, y, CellFactory.create(x, y, pen.currentId));
+			});
+			bottomTriangle.fill((x, y) => {
+				grid.set(x, y, CellFactory.create(x, y, pen.currentId));
+			});*/
+
+			for(let h = 0; h < dist; h += 0.5) {
+				for(let k = -pen.radius; k < pen.radius; k += 0.5) {
+					const x = Math.floor(pen.prevX + h * cos - k * sin);
+					const y = Math.floor(pen.prevY + k * cos + h * sin);
+
+					grid.set(x, y, CellFactory.create(x, y, pen.currentId));
+				}
+			}
+		}
+
+		// draw circle
+		const circle = new Circle(pen.x, pen.y, pen.radius);
+		circle.fill((x, y) => {
+			grid.set(x, y, CellFactory.create(x, y, pen.currentId));
+		});
+		/*for(let h = -pen.radius; h < pen.radius; h++) {
+			for(let k = -pen.radius; k < pen.radius; k++) {
+				const x = Math.floor(pen.x + h);
+				const y = Math.floor(pen.y + k);
+
+				if(h ** 2 + k ** 2 < pen.radius ** 2) {
+					grid.set(x, y, CellFactory.create(x, y, pen.currentId));
+				}
+			}
+		}*/
 	}
 }
 
