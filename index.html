@@ -10,7 +10,7 @@
 		<meta name="author" content="Kyle Amoroso" />
 		<meta name="description" content="A sand-box game that lets you play with different elements" />
 		<meta name="keywords" content="sand,sand-box,game,html5" />
-		<meta name="version" content="1.0.1" />
+		<meta name="version" content="1.1" />
 		<meta property="og:title" content="Sand Game" />
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content="https://kamoroso94.github.io/sand/" />
@@ -48,6 +48,17 @@
 
 				<form class="form-inline" id="controls">
 					<div class="form-group">
+						<label for="speed">Speed:</label>
+						<select class="form-control" id="speed">
+							<option value="0">Pause</option>
+							<option value="7.5">25%</option>
+							<option value="15">50%</option>
+							<option value="30" selected>100%</option>
+							<option value="45">150%</option>
+							<option value="60">200%</option>
+						</select>
+					</div>
+					<div class="form-group">
 						<label for="radius">Pen Radius:</label>
 						<input type="range" class="form-control" id="radius" value="5" min="1" max="10" step="1" />
 					</div>
@@ -58,6 +69,7 @@
 							<option value="ground" selected>Ground</option>
 							<option value="sand">Sand</option>
 							<option value="water">Water</option>
+							<option value="plant">Plant</option>
 							<option value="sand-spout">Sand Spout</option>
 							<option value="water-spout">Water Spout</option>
 						</select>

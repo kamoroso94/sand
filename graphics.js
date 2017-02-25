@@ -16,6 +16,7 @@ function drawHorizontal(x1, x2, y, setPixel) {
 }
 
 // https://youtu.be/q8bEoSn4KZk
+// TODO: fix bug where not filling when drawing left horizontal
 function fillPolygon(points, setPixel) {
     let minY, maxY;
     minY = maxY = points[0].y;

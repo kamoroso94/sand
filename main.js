@@ -4,14 +4,20 @@
 	add more cell types
 */
 
-let canvas, ctx, grid, drawId, tickId, lastDraw, lastTick;
-const TPS = 30;
-const pen = new Pen();
+let game;
 
+// setup
 window.addEventListener("load", event => {
-	canvas = document.getElementById("game");
-	ctx = canvas.getContext("2d");
+	const canvas = document.getElementById("game");
+	const ctx = canvas.getContext("2d");
+	const pen = new Pen();
+	const grid = new Grid(canvas.width / Cell.SIZE, canvas.height / Cell.SIZE);
 
+	// init
+	resetGrid(grid);
+	game = new Game(draw, tick, {canvas, ctx, pen, grid});
+
+	// helper
 	const translateCoords = ({clientX, clientY}) => {
 		const bcr = canvas.getBoundingClientRect();
 		const gridWidth = canvas.width / Cell.SIZE;
@@ -24,6 +30,8 @@ window.addEventListener("load", event => {
 		return {x, y};
 	};
 
+	// event listeners
+	// pen
 	canvas.addEventListener("mousedown", event => {
 		event.preventDefault();
 		const {x, y} = translateCoords(event);
@@ -58,6 +66,7 @@ window.addEventListener("load", event => {
 		event.preventDefault();
 
 		const touch = getTouch(pen.touchId, event.changedTouches);
+
 		if(!pen.isDown || touch == null) {
 			return;
 		}
@@ -70,12 +79,19 @@ window.addEventListener("load", event => {
 		event.preventDefault();
 
 		const touch = getTouch(pen.touchId, event.changedTouches);
+
 		if(!pen.isDown || touch == null) {
 			return;
 		}
 
 		const {x, y} = translateCoords(touch);
 		pen.up(x, y);
+	});
+
+	// ui
+	const speedTag = document.getElementById("speed");
+	speedTag.addEventListener("change", event => {
+		game.changeTPS(parseFloat(speedTag.value));
 	});
 
 	const radiusTag = document.getElementById("radius");
@@ -97,37 +113,36 @@ window.addEventListener("load", event => {
 
 	const formTag = document.getElementById("controls");
 	formTag.addEventListener("reset", event => {
+		game.changeTPS(30);
 		pen.reset();
 		radiusTag.setAttribute("data-content", pen.radius);
 		resetGrid(grid);
 	});
 
-	init();
+	// begin
+	game.resume();
 });
 
-function init() {
-	grid = new Grid(canvas.width / Cell.SIZE, canvas.height / Cell.SIZE);
-	resetGrid(grid);
+function draw(dt) {
+	const bgColor = "#000000";
+	const {canvas, ctx, pen, grid} = game.state;
 
-	lastDraw = Date.now();
-	drawId = requestAnimationFrame(draw);
-
-	lastTick = Date.now();
-	tickId = setTimeout(tick, 1000 / TPS);
-}
-
-function draw(/* timestamp */) {
-	const currentDraw = Date.now();
-	// const dt = currentDraw - lastDraw;
-
-	ctx.fillStyle = "#000000";
+	// reset canvas
+	ctx.fillStyle = bgColor;
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+	// pen
+	if(pen.isDown) {
+		pen.stroke(grid);
+	}
+	pen.setPrevious(pen.x, pen.y);
+
+	// draw cells
 	for(let x = 0; x < grid.width; x++) {
 		for(let y = 0; y < grid.height; y++) {
 			const cell = grid.get(x, y);
 
-			if(cell instanceof Air) {
+			if(cell.color == bgColor) {
 				continue;
 			}
 
@@ -135,37 +150,25 @@ function draw(/* timestamp */) {
 			ctx.fillRect(Cell.SIZE * cell.x, Cell.SIZE * cell.y, Cell.SIZE, Cell.SIZE);
 		}
 	}
-
-	lastDraw = currentDraw;
-	drawId = requestAnimationFrame(draw);
 }
 
-function tick() {
-	const currentTick = Date.now();
-	// const dt = currentTick - lastTick;
-
-	// pen
-	if(pen.isDown) {
-		pen.stroke(grid);
-	}
-
-	pen.setPrevious(pen.x, pen.y);
+function tick(dt) {
+	const {canvas, ctx, pen, grid} = game.state;
 
 	// movement
 	const visited = new Set();
-
 	for(let y = 0; y < grid.height; y++) {
 		for(let x = 0; x < grid.width; x++) {
 			const cell = grid.get(x, y);
 
-			if(visited.has(cell)) {
+			if(visited.has(cell) || !cell.gravity) {
 				continue;
 			}
 
 			// strafe
 			let cellBelow = grid.hasPoint(cell.x, cell.y + 1) ? grid.get(cell.x, cell.y + 1) : new Air(cell.x, cell.y + 1);
 
-			if(cell.gravity && cell.density <= cellBelow.density) {
+			if(cell.density <= cellBelow.density) {
 				for(let i = 0; i < 2; i++) {
 					const cellAside = grid.hasPoint(cell.x + cell.dir, cell.y) ? grid.get(cell.x + cell.dir, cell.y) : new Air(cell.x + cell.dir, cell.y);
 
@@ -188,7 +191,7 @@ function tick() {
 			// fall
 			cellBelow = grid.hasPoint(cell.x, cell.y + 1) ? grid.get(cell.x, cell.y + 1) : new Air(cell.x, cell.y + 1);
 
-			if(cell.gravity && !visited.has(cellBelow) && cell.density > cellBelow.density) {
+			if(!visited.has(cellBelow) && cell.density > cellBelow.density) {
 				grid.set(cell.x, cell.y, cellBelow);
 				grid.set(cell.x, cell.y + 1, cell);
 
@@ -202,27 +205,25 @@ function tick() {
 	}
 	visited.clear();
 
-	// spouts
+	// spreading
 	for(let y = 0; y < grid.height; y++) {
 		for(let x = 0; x < grid.width; x++) {
 			const cell = grid.get(x, y);
 
-			if(cell.spawn != null) {
+			if(cell instanceof Converter) {
 				for(let h = -1; h <= 1; h++) {
 					for(let k = -1; k <= 1; k++) {
-						if((h == 0 || k == 0) && h != k && grid.hasPoint(x + h, y + k) && grid.get(x + h, y + k) instanceof Air) {
-							grid.set(x + h, y + k, CellFactory.create(x + h, y + k, cell.spawn));
+						if((h == 0 || k == 0) && h != k && Math.random() < Converter.SPREAD_FACTOR) {
+							grid.set(x + h, y + k, cell.convert(grid.get(x + h, y + k)));
 						}
 					}
 				}
 			}
 		}
 	}
-
-	lastTick = currentTick;
-	tickId = setTimeout(tick, 1000 / TPS);
 }
 
+// helper functions
 function resetGrid(grid) {
 	for(let x = 0; x < grid.width; x++) {
 		for(let y = 0; y < grid.height; y++)  {
