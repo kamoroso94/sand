@@ -8,11 +8,11 @@ class Point {
 }
 
 function drawHorizontal(x1, x2, y, setPixel) {
-    const minX = Math.min(x1, x2);
-    const maxX = Math.max(x1, x2);
+    const minX = Math.floor(Math.min(x1, x2));
+    const maxX = Math.floor(Math.max(x1, x2));
     y = Math.floor(y);
 
-    for(let x = Math.floor(minX); x < maxX; x++) {
+    for(let x = minX; x <= maxX; x++) {
         setPixel(x, y);
     }
 }
@@ -26,12 +26,12 @@ function fillPolygon(points, setPixel) {
 
     // find min and max y of polygon
     points.forEach((p) => {
-        minY = Math.min(minY, p.y);
-        maxY = Math.max(p.y, maxY);
+        minY = Math.floor(Math.min(minY, p.y));
+        maxY = Math.ceil(Math.max(p.y, maxY));
     });
 
     // scan polygon
-    for(let y = Math.ceil(minY); y < maxY; y++) {
+    for(let y = minY; y <= maxY; y++) {
         const row = [];
         let p1 = points[points.length - 1];
 
@@ -39,8 +39,15 @@ function fillPolygon(points, setPixel) {
         points.forEach((p2) => {
             // consider only non-horizontal edges the scanline intersects
             // where scanline doesn't intersect at its max y
-            if(p1.y != p2.y && (p1.y <= y && y < p2.y || p2.y <= y && y < p1.y)) {
-                row.push(map(y, p1.y, p2.y, p1.x, p2.x));
+            const localMinY = Math.min(p1.y, p2.y);
+            const localMaxY = Math.max(p1.y, p2.y);
+            if(localMinY <= y && y <= localMaxY) {
+                if(localMinY == localMaxY) {
+                    drawHorizontal(p1.x, p2.x, y, setPixel);
+                }
+                if(y != localMaxY) {
+                    row.push(map(y, p1.y, p2.y, p1.x, p2.x));
+                }
             }
             p1 = p2;
         });
@@ -54,14 +61,15 @@ function fillPolygon(points, setPixel) {
         for(let i = 1; i < row.length; i += 2) {
             const x1 = row[i - 1];
             const x2 = row[i];
-            drawHorizontal(Math.ceil(x1), x2, y, setPixel);
+            drawHorizontal(x1, x2, y, setPixel);
         }
     }
 }
 
 // http://www.cs.mun.ca/av/old/teaching/cg/notes/raster_circ_inclass.pdf
+// TODO: fix circle filling
 function fillCircle(x, y, r, setPixel) {
-    [x, y, r] = [x, y, r].map((v) => Math.floor(v));
+    // [x, y, r] = [x, y, r].map((v) => Math.floor(v));
     let h = 0;
     let k = r;
     let d = 1 - r;

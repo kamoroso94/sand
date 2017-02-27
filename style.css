@@ -5,4 +5,9 @@
 canvas {
 	box-sizing: content-box;
 	width: 100%;
+	background-color: #ffffff;
+	background-image: url("images/noscript.png");
+	background-size: contain;
+	background-origin: content-box;
+	background-repeat: no-repeat;
 }

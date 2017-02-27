@@ -130,6 +130,20 @@ class Grid {
 		this.array.fill(value);
 	}
 
+	forEach(callback, thisArg) {
+		for(let y = 0; y < this.height; y++) {
+			for(let x = 0; x < this.width; x++) {
+				callback.call(thisArg, this.get(x, y), [x, y], this);
+			}
+		}
+	}
+
+	*[Symbol.iterator]() {
+		for(const value of this.array) {
+			yield value;
+		}
+	}
+
 	clear() {
 		this.fill(undefined);
 	}
@@ -220,8 +234,12 @@ class Cell extends Point {
 		this.id = null;
 		this.color = "#000000";
 		this.density = 0;
-		this.dir = 1;
+		this.dir = Math.random() < 0.5 ? -1 : 1;
 		this.gravity = false;
+	}
+
+	canPhaseThrough(cell) {
+		return this.density > cell.density;
 	}
 
 	static get SIZE() {
@@ -241,7 +259,7 @@ class Converter extends Cell {
 	}
 
 	static get SPREAD_FACTOR() {
-		return 0.05;
+		return 0.0625;	// 1/16
 	}
 }
 
