@@ -2,23 +2,23 @@
 
 class Game {
 	constructor(draw, tick, state, tps = 30) {
-		this.draw = dt => {
+		this.draw = (dt) => {
 			if(draw) {
 				draw(dt);
 			}
 		};
-		this.tick = dt => {
+		this.tick = (dt) => {
 			if(tick) {
 				tick(dt);
 			}
 		};
 		this.state = state;
 		this.TPS = tps;
-		// this.listeners = {};
+		this.listeners = {};
 	}
 
 	// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget#_Simple_implementation_of_EventTarget
-	/*addEventListener(type, callback) {
+	addEventListener(type, callback) {
 		if(!(type in this.listeners)) {
 			this.listeners[type] = new Set();
 		}
@@ -48,7 +48,7 @@ class Game {
 		for(const listener of this.listeners[event.type]) {
 			listener.call(this, event);
 		}
-	}*/
+	}
 
 	resumeDraw() {
 		this.pauseDraw();
@@ -106,6 +106,36 @@ class Game {
 		if(this.TPS > 0) {
 			this.resumeTick();
 		}
+	}
+}
+
+class Grid {
+	constructor(width, height) {
+		this.width = width;
+		this.height = height;
+		this.array = new Array(width * height);
+	}
+
+	get(x, y) {
+		return this.hasPoint(x, y) ? this.array[x + y * this.width] : undefined;
+	}
+
+	set(x, y, value) {
+		if(this.hasPoint(x, y)) {
+			this.array[x + y * this.width] = value;
+		}
+	}
+
+	fill(value) {
+		this.array.fill(value);
+	}
+
+	clear() {
+		this.fill(undefined);
+	}
+
+	hasPoint(x, y) {
+		return x >= 0 && x < this.width && y >= 0 && y < this.height;
 	}
 }
 
@@ -181,38 +211,6 @@ class Pen extends Point {
 
 		// draw pen endpoint
 		fillCircle(this.x, this.y, this.radius, setPixel);
-	}
-}
-
-class Grid {
-	constructor(width, height) {
-		this.width = width;
-		this.height = height;
-		this.array = new Array(width * height);
-	}
-
-	get(x, y) {
-		return this.hasPoint(x, y) ? this.array[x + y * this.width] : undefined;
-	}
-
-	set(x, y, value) {
-		if(this.hasPoint(x, y)) {
-			this.array[x + y * this.width] = value;
-		}
-	}
-
-	fill(value) {
-		for(let i = 0; i < this.array.length; i++) {
-			this.array[i] = value;
-		}
-	}
-
-	clear() {
-		this.fill(undefined);
-	}
-
-	hasPoint(x, y) {
-		return x >= 0 && x < this.width && y >= 0 && y < this.height;
 	}
 }
 

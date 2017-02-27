@@ -7,7 +7,7 @@
 let game;
 
 // setup
-window.addEventListener("load", event => {
+window.addEventListener("load", (event) => {
 	const canvas = document.getElementById("game");
 	const ctx = canvas.getContext("2d");
 	const pen = new Pen();
@@ -32,23 +32,23 @@ window.addEventListener("load", event => {
 
 	// event listeners
 	// pen
-	canvas.addEventListener("mousedown", event => {
+	canvas.addEventListener("mousedown", (event) => {
 		event.preventDefault();
 		const {x, y} = translateCoords(event);
 		pen.down(x, y);
 	});
 
-	document.addEventListener("mousemove", event => {
+	document.addEventListener("mousemove", (event) => {
 		const {x, y} = translateCoords(event);
 		pen.move(x, y);
 	});
 
-	document.addEventListener("mouseup", event => {
+	document.addEventListener("mouseup", (event) => {
 		const {x, y} = translateCoords(event);
 		pen.up(x, y);
 	});
 
-	canvas.addEventListener("touchstart", event => {
+	canvas.addEventListener("touchstart", (event) => {
 		event.preventDefault();
 
 		if(pen.isDown) {
@@ -62,7 +62,7 @@ window.addEventListener("load", event => {
 		pen.down(x, y);
 	});
 
-	canvas.addEventListener("touchmove", event => {
+	canvas.addEventListener("touchmove", (event) => {
 		event.preventDefault();
 
 		const touch = getTouch(pen.touchId, event.changedTouches);
@@ -75,7 +75,7 @@ window.addEventListener("load", event => {
 		pen.move(x, y);
 	});
 
-	canvas.addEventListener("touchend", event => {
+	canvas.addEventListener("touchend", (event) => {
 		event.preventDefault();
 
 		const touch = getTouch(pen.touchId, event.changedTouches);
@@ -90,7 +90,7 @@ window.addEventListener("load", event => {
 
 	// ui
 	const speedTag = document.getElementById("speed");
-	speedTag.addEventListener("change", event => {
+	speedTag.addEventListener("change", (event) => {
 		game.changeTPS(parseFloat(speedTag.value));
 	});
 
@@ -100,19 +100,19 @@ window.addEventListener("load", event => {
 		placement: "auto bottom",
 		trigger: "hover"
 	});
-	radiusTag.addEventListener("input", event => {
+	radiusTag.addEventListener("input", (event) => {
 		pen.radius = parseInt(radiusTag.value);
 		radiusTag.setAttribute("data-content", pen.radius);
 		$(radiusTag).popover("show");
 	});
 
 	const penTag = document.getElementById("pen");
-	penTag.addEventListener("change", event => {
+	penTag.addEventListener("change", (event) => {
 		pen.currentId = penTag.value;
 	});
 
 	const formTag = document.getElementById("controls");
-	formTag.addEventListener("reset", event => {
+	formTag.addEventListener("reset", (event) => {
 		game.changeTPS(30);
 		pen.reset();
 		radiusTag.setAttribute("data-content", pen.radius);
@@ -224,6 +224,14 @@ function tick(dt) {
 }
 
 // helper functions
+function map(val, a1, a2, b1, b2) {
+    return (val - a1) / (a2 - a1) * (b2 - b1) + b1;
+}
+
+function clamp(value, min, max) {
+	return Math.max(min, Math.min(value, max));
+}
+
 function resetGrid(grid) {
 	for(let x = 0; x < grid.width; x++) {
 		for(let y = 0; y < grid.height; y++)  {
