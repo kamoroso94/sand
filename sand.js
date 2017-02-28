@@ -1,7 +1,7 @@
 "use strict";
 
 class Game {
-	constructor(draw, tick, state, tps = 30) {
+	constructor(draw, tick, state = {}, tps = 30) {
 		this.draw = (dt) => {
 			if(draw) {
 				draw(dt);
@@ -123,7 +123,10 @@ class Grid {
 	set(x, y, value) {
 		if(this.hasPoint(x, y)) {
 			this.array[x + y * this.width] = value;
+			return true;
 		}
+
+		return false;
 	}
 
 	fill(value) {

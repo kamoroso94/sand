@@ -185,47 +185,54 @@ function tick(dt) {
 		while(x >=0 && x < grid.width) {
 			const cell = grid.get(x, y);
 
-			if(visited.has(cell) || !cell.gravity) {
-				x += dx;
-				continue;
+			if(!visited.has(cell) && cell.gravity) {
+				// strafe
+				moveSide(cell, grid, visited);
+				// fall
+				moveDown(cell, grid, visited);
 			}
 
-			let cellBelow = grid.hasPoint(cell.x, cell.y + 1) ? grid.get(cell.x, cell.y + 1) : new Air(cell.x, cell.y + 1);
-
-			// strafe
-			for(let i = 0; i < 2; i++) {
-				const cellAside = grid.hasPoint(cell.x + cell.dir, cell.y) ? grid.get(cell.x + cell.dir, cell.y) : new Air(cell.x + cell.dir, cell.y);
-				const cellOtherSide = grid.hasPoint(cell.x - cell.dir, cell.y) ? grid.get(cell.x - cell.dir, cell.y) : new Air(cell.x - cell.dir, cell.y);
-
-				if(!visited.has(cellAside) && cell.canPhaseThrough(cellAside) && (!cell.canPhaseThrough(cellBelow) || !cell.canPhaseThrough(cellOtherSide))) {
-					grid.set(cell.x, cell.y, cellAside);
-					grid.set(cell.x + cell.dir, cell.y, cell);
-
-					visited.add(cell);
-					visited.add(cellAside);
-
-					cellAside.x -= cell.dir;
-					cell.x += cell.dir;
-					cellAside.dir = -cell.dir;
-					break;
-				} else {
-					cell.dir *= -1;
-				}
-			}
-
-			// fall
-			cellBelow = grid.hasPoint(cell.x, cell.y + 1) ? grid.get(cell.x, cell.y + 1) : new Air(cell.x, cell.y + 1);
-
-			if(!visited.has(cellBelow) && cell.canPhaseThrough(cellBelow)) {
-				grid.set(cell.x, cell.y, cellBelow);
-				grid.set(cell.x, cell.y + 1, cell);
-
-				visited.add(cell);
-				visited.add(cellBelow);
-
-				cellBelow.y--;
-				cell.y++;
-			}
+			// if(visited.has(cell) || !cell.gravity) {
+			// 	x += dx;
+			// 	continue;
+			// }
+			//
+			// let cellBelow = grid.hasPoint(cell.x, cell.y + 1) ? grid.get(cell.x, cell.y + 1) : new Air(cell.x, cell.y + 1);
+			//
+			// // strafe
+			// for(let i = 0; i < 2; i++) {
+			// 	const cellAside = grid.hasPoint(cell.x + cell.dir, cell.y) ? grid.get(cell.x + cell.dir, cell.y) : new Air(cell.x + cell.dir, cell.y);
+			// 	const cellOtherSide = grid.hasPoint(cell.x - cell.dir, cell.y) ? grid.get(cell.x - cell.dir, cell.y) : new Air(cell.x - cell.dir, cell.y);
+			//
+			// 	if(!visited.has(cellAside) && cell.canPhaseThrough(cellAside) && (!cell.canPhaseThrough(cellBelow) || !cell.canPhaseThrough(cellOtherSide))) {
+			// 		grid.set(cell.x, cell.y, cellAside);
+			// 		grid.set(cell.x + cell.dir, cell.y, cell);
+			//
+			// 		visited.add(cell);
+			// 		visited.add(cellAside);
+			//
+			// 		cellAside.x -= cell.dir;
+			// 		cell.x += cell.dir;
+			// 		cellAside.dir = -cell.dir;
+			// 		break;
+			// 	} else {
+			// 		cell.dir *= -1;
+			// 	}
+			// }
+			//
+			// // fall
+			// cellBelow = grid.hasPoint(cell.x, cell.y + 1) ? grid.get(cell.x, cell.y + 1) : new Air(cell.x, cell.y + 1);
+			//
+			// if(!visited.has(cellBelow) && cell.canPhaseThrough(cellBelow)) {
+			// 	grid.set(cell.x, cell.y, cellBelow);
+			// 	grid.set(cell.x, cell.y + 1, cell);
+			//
+			// 	visited.add(cell);
+			// 	visited.add(cellBelow);
+			//
+			// 	cellBelow.y--;
+			// 	cell.y++;
+			// }
 
 			x += dx;
 		}
@@ -253,6 +260,51 @@ function tick(dt) {
 }
 
 // helper functions
+function getOrMakeCell(x, y, grid) {
+	return grid.hasPoint(x, y) ? grid.get(x, y) : new Air(x, y);
+}
+
+function moveSide(cell, grid, visited) {
+	const cellBelow = getOrMakeCell(cell.x, cell.y + 1, grid);
+
+	for(let i = 0; i < 2; i++) {
+		const cellAside = getOrMakeCell(cell.x + cell.dir, cell.y, grid);
+		const cellOtherSide = getOrMakeCell(cell.x - cell.dir, cell.y, grid);
+
+		if(!visited.has(cellAside) && cell.canPhaseThrough(cellAside) && (!cell.canPhaseThrough(cellOtherSide) || !cell.canPhaseThrough(cellBelow))) {
+			grid.set(cell.x, cell.y, cellAside);
+			grid.set(cellAside.x, cellAside.y, cell);
+			cellAside.x -= cell.dir;
+			cell.x += cell.dir;
+			visited.add(cellAside);
+			visited.add(cell);
+
+			return true;
+		} else {
+			cell.dir *= -1;
+		}
+	}
+
+	return false;
+}
+
+function moveDown(cell, grid, visited) {
+	const cellBelow = getOrMakeCell(cell.x, cell.y + 1, grid);
+
+	if(!visited.has(cellBelow) && cell.canPhaseThrough(cellBelow)) {
+		grid.set(cell.x, cell.y, cellBelow);
+		grid.set(cellBelow.x, cellBelow.y, cell);
+		cellBelow.y--;
+		cell.y++;
+		visited.add(cellBelow);
+		visited.add(cell);
+
+		return true;
+	}
+
+	return false;
+}
+
 function map(val, a1, a2, b1, b2) {
     return (val - a1) / (a2 - a1) * (b2 - b1) + b1;
 }
