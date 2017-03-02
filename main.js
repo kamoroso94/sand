@@ -15,12 +15,21 @@ window.addEventListener("load", (event) => {
 
 	// init
 	resetGrid(grid);
-	game = new Game(draw, tick, {canvas, ctx, pen, grid});
+	game = new Game({canvas, ctx, pen, grid});
+
+	// event listeners
+	attatchHandlers();
+
+	// begin
+	game.resume();
+});
+
+function attatchHandlers() {
+	const {canvas, pen, grid} = game.state;
 
 	// helper
 	const translateCoords = ({clientX, clientY}) => {
 		// translate coords in viewport to translated, scaled, clipped coords of grid
-		const {canvas, grid} = game.state;
 		const bcr = canvas.getBoundingClientRect();
 		const sideWidth = ["top", "right", "bottom", "left"].reduce((sum, side) => {
 			sum[side] = Object.values($(canvas).css([
@@ -37,23 +46,19 @@ window.addEventListener("load", (event) => {
 		return {x, y};
 	};
 
-	// event listeners
-	// pen
+	// pen events
 	canvas.addEventListener("mousedown", (event) => {
 		event.preventDefault();
-		const {pen} = game.state;
 		const {x, y} = translateCoords(event);
 		pen.down(x, y);
 	});
 
 	document.addEventListener("mousemove", (event) => {
-		const {pen} = game.state;
 		const {x, y} = translateCoords(event);
 		pen.move(x, y);
 	});
 
 	document.addEventListener("mouseup", (event) => {
-		const {pen} = game.state;
 		const {x, y} = translateCoords(event);
 		pen.up(x, y);
 	});
@@ -61,7 +66,6 @@ window.addEventListener("load", (event) => {
 	canvas.addEventListener("touchstart", (event) => {
 		event.preventDefault();
 
-		const {pen} = game.state;
 		if(pen.isDown) {
 			return;
 		}
@@ -76,7 +80,6 @@ window.addEventListener("load", (event) => {
 	canvas.addEventListener("touchmove", (event) => {
 		event.preventDefault();
 
-		const {pen} = game.state;
 		const touch = getTouch(pen.touchId, event.changedTouches);
 
 		if(!pen.isDown || touch == null) {
@@ -90,7 +93,6 @@ window.addEventListener("load", (event) => {
 	canvas.addEventListener("touchend", (event) => {
 		event.preventDefault();
 
-		const {pen} = game.state;
 		const touch = getTouch(pen.touchId, event.changedTouches);
 
 		if(!pen.isDown || touch == null) {
@@ -101,10 +103,10 @@ window.addEventListener("load", (event) => {
 		pen.up(x, y);
 	});
 
-	// ui
+	// ui events
 	const speedTag = document.getElementById("speed");
 	speedTag.addEventListener("change", (event) => {
-		game.changeTPS(parseFloat(speedTag.value));
+		game.setTPS(parseFloat(speedTag.value));
 	});
 
 	const radiusTag = document.getElementById("radius");
@@ -114,7 +116,6 @@ window.addEventListener("load", (event) => {
 		trigger: "hover"
 	});
 	radiusTag.addEventListener("input", (event) => {
-		const {pen} = game.state;
 		pen.radius = parseInt(radiusTag.value);
 		radiusTag.setAttribute("data-content", pen.radius);
 		$(radiusTag).popover("show");
@@ -122,26 +123,26 @@ window.addEventListener("load", (event) => {
 
 	const penTag = document.getElementById("pen");
 	penTag.addEventListener("change", (event) => {
-		const {pen} = game.state;
 		pen.currentId = penTag.value;
 	});
 
 	const formTag = document.getElementById("controls");
 	formTag.addEventListener("reset", (event) => {
-		const {pen, grid} = game.state;
-		game.changeTPS(30);
+		game.setTPS(30);
 		pen.reset();
 		radiusTag.setAttribute("data-content", pen.radius);
 		resetGrid(grid);
 	});
 
-	// begin
-	game.resume();
-});
+	// game events
+	game.addEventListener("draw", draw);
+	game.addEventListener("tick", tick);
+}
 
-function draw(dt) {
+function draw(event) {
+	const {dt} = event.detail;
+	const {canvas, ctx, pen, grid} = this.state;
 	const bgColor = "#000000";
-	const {canvas, ctx, pen, grid} = game.state;
 
 	// reset canvas
 	ctx.fillStyle = bgColor;
@@ -160,22 +161,19 @@ function draw(dt) {
 	pen.setPrevious(pen.x, pen.y);
 
 	// draw cells
-	for(let x = 0; x < grid.width; x++) {
-		for(let y = 0; y < grid.height; y++) {
-			const cell = grid.get(x, y);
-
-			if(cell.color == bgColor) {
-				continue;
-			}
-
-			ctx.fillStyle = cell.color;
-			ctx.fillRect(Cell.SIZE * cell.x, Cell.SIZE * cell.y, Cell.SIZE, Cell.SIZE);
+	for(const cell of grid) {
+		if(cell.color == bgColor) {
+			continue;
 		}
+
+		ctx.fillStyle = cell.color;
+		ctx.fillRect(Cell.SIZE * cell.x, Cell.SIZE * cell.y, Cell.SIZE, Cell.SIZE);
 	}
 }
 
-function tick(dt) {
-	const {canvas, ctx, pen, grid} = game.state;
+function tick(event) {
+	const {dt} = event.detail;
+	const {canvas, ctx, pen, grid} = this.state;
 	const visited = new Set();
 
 	// movement
@@ -185,54 +183,12 @@ function tick(dt) {
 		while(x >=0 && x < grid.width) {
 			const cell = grid.get(x, y);
 
-			if(!visited.has(cell) && cell.gravity) {
+			if(!visited.has(cell) && cell.hasGravity) {
 				// strafe
 				moveSide(cell, grid, visited);
 				// fall
 				moveDown(cell, grid, visited);
 			}
-
-			// if(visited.has(cell) || !cell.gravity) {
-			// 	x += dx;
-			// 	continue;
-			// }
-			//
-			// let cellBelow = grid.hasPoint(cell.x, cell.y + 1) ? grid.get(cell.x, cell.y + 1) : new Air(cell.x, cell.y + 1);
-			//
-			// // strafe
-			// for(let i = 0; i < 2; i++) {
-			// 	const cellAside = grid.hasPoint(cell.x + cell.dir, cell.y) ? grid.get(cell.x + cell.dir, cell.y) : new Air(cell.x + cell.dir, cell.y);
-			// 	const cellOtherSide = grid.hasPoint(cell.x - cell.dir, cell.y) ? grid.get(cell.x - cell.dir, cell.y) : new Air(cell.x - cell.dir, cell.y);
-			//
-			// 	if(!visited.has(cellAside) && cell.canPhaseThrough(cellAside) && (!cell.canPhaseThrough(cellBelow) || !cell.canPhaseThrough(cellOtherSide))) {
-			// 		grid.set(cell.x, cell.y, cellAside);
-			// 		grid.set(cell.x + cell.dir, cell.y, cell);
-			//
-			// 		visited.add(cell);
-			// 		visited.add(cellAside);
-			//
-			// 		cellAside.x -= cell.dir;
-			// 		cell.x += cell.dir;
-			// 		cellAside.dir = -cell.dir;
-			// 		break;
-			// 	} else {
-			// 		cell.dir *= -1;
-			// 	}
-			// }
-			//
-			// // fall
-			// cellBelow = grid.hasPoint(cell.x, cell.y + 1) ? grid.get(cell.x, cell.y + 1) : new Air(cell.x, cell.y + 1);
-			//
-			// if(!visited.has(cellBelow) && cell.canPhaseThrough(cellBelow)) {
-			// 	grid.set(cell.x, cell.y, cellBelow);
-			// 	grid.set(cell.x, cell.y + 1, cell);
-			//
-			// 	visited.add(cell);
-			// 	visited.add(cellBelow);
-			//
-			// 	cellBelow.y--;
-			// 	cell.y++;
-			// }
 
 			x += dx;
 		}
@@ -248,7 +204,7 @@ function tick(dt) {
 		if(!visited.has(cell) && cell instanceof Converter) {
 			for(let h = -1; h <= 1; h++) {
 				for(let k = -1; k <= 1; k++) {
-					if((h == 0 || k == 0) && h != k && Math.random() < Converter.SPREAD_FACTOR) {
+					if(grid.hasPoint(x + h, y + k) && (h == 0 || k == 0) && h != k && Math.random() < Converter.SPREAD_FACTOR) {
 						const resultCell = cell.convert(grid.get(x + h, y + k));
 						grid.set(x + h, y + k, resultCell);
 						visited.add(resultCell);
