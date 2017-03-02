@@ -1,17 +1,7 @@
 "use strict";
 
 class Game {
-	constructor(draw, tick, state = {}, tps = 30) {
-		this.draw = (dt) => {
-			if(draw) {
-				draw(dt);
-			}
-		};
-		this.tick = (dt) => {
-			if(tick) {
-				tick(dt);
-			}
-		};
+	constructor(state = {}, tps = 30) {
 		this.state = state;
 		this.TPS = tps;
 		this.listeners = {};
@@ -40,14 +30,14 @@ class Game {
 
 	dispatchEvent(event) {
 		if (!(event.type in this.listeners)) {
-			return;
+			return true;
 		}
-
-		event.target = this;
 
 		for(const listener of this.listeners[event.type]) {
 			listener.call(this, event);
 		}
+
+		return !event.defaultPrevented;
 	}
 
 	resumeDraw() {
@@ -59,7 +49,7 @@ class Game {
 			const currentDraw = Date.now();
 			const dt = currentDraw - this.lastDraw;
 
-			this.draw(dt);
+			this.dispatchEvent(new CustomEvent("draw", {detail: {dt}}));
 			this.lastDraw = currentDraw;
 			this.drawId = requestAnimationFrame(draw);
 		};
@@ -76,14 +66,16 @@ class Game {
 			const currentTick = Date.now();
 			const dt = currentTick - this.lastTick;
 
-			this.tick(dt);
+			this.dispatchEvent(new CustomEvent("tick", {detail: {dt}}));
 			this.lastTick = currentTick;
 		}, 1000 / this.TPS);
 	}
 
 	resume() {
-		this.resumeDraw();
-		this.resumeTick();
+		if(this.dispatchEvent(new CustomEvent("resume"))) {
+			this.resumeDraw();
+			this.resumeTick();
+		}
 	}
 
 	pauseDraw() {
@@ -95,11 +87,13 @@ class Game {
 	}
 
 	pause() {
-		this.pauseDraw();
-		this.pauseTick();
+		if(this.dispatchEvent(new CustomEvent("pause"))) {
+			this.pauseDraw();
+			this.pauseTick();
+		}
 	}
 
-	changeTPS(tps) {
+	setTPS(tps) {
 		this.pauseTick();
 		this.TPS = tps;
 
@@ -141,10 +135,8 @@ class Grid {
 		}
 	}
 
-	*[Symbol.iterator]() {
-		for(const value of this.array) {
-			yield value;
-		}
+	[Symbol.iterator]() {
+		return this.array[Symbol.iterator]();
 	}
 
 	clear() {
@@ -238,11 +230,13 @@ class Cell extends Point {
 		this.color = "#000000";
 		this.density = 0;
 		this.dir = Math.random() < 0.5 ? -1 : 1;
-		this.gravity = false;
+		this.hasGravity = false;
 	}
 
 	canPhaseThrough(cell) {
-		return this.density > cell.density;
+		const densityOrder = ["air", "oil", "water", "sand"];
+
+		return this.hasGravity && cell.hasGravity && this.density > cell.density;
 	}
 
 	static get SIZE() {
@@ -251,14 +245,13 @@ class Cell extends Point {
 }
 
 class Converter extends Cell {
-	constructor(x, y, victimId, childId) {
+	constructor(x, y, conversions) {
 		super(x, y);
-		this.victimId = victimId;
-		this.childId = childId;
+		this.conversions = conversions;
 	}
 
 	convert(cell) {
-		return cell != null && cell.id == this.victimId ? CellFactory.create(cell.x, cell.y, this.childId) : cell;
+		return (cell != null && cell.id in this.conversions) ? CellFactory.create(cell.x, cell.y, this.conversions[cell.id]) : cell;
 	}
 
 	static get SPREAD_FACTOR() {
@@ -270,6 +263,38 @@ class Air extends Cell {
 	constructor(x, y) {
 		super(x, y);
 		this.id = "air";
+		this.hasGravity = true;
+	}
+}
+
+class Oil extends Cell {
+	constructor(x, y) {
+		super(x, y);
+		this.id = "oil";
+		this.color = "#804040";
+		this.hasGravity = true;
+		this.density = 1;
+	}
+}
+
+class Water extends Cell {
+	constructor(x, y) {
+		super(x, y);
+		this.id = "water";
+		this.color = "#2020fe";
+		this.hasGravity = true;
+		this.density = 2;
+	}
+}
+
+class Sand extends Converter {
+	// SandSpout "#edb744"
+	constructor(x, y) {
+		super(x, y, {"oil-spout": "sand", "water-spout": "sand"});
+		this.id = "sand";
+		this.color = "#eecc80";
+		this.hasGravity = true;
+		this.density = 3;
 	}
 }
 
@@ -278,54 +303,30 @@ class Ground extends Cell {
 		super(x, y);
 		this.id = "ground";
 		this.color = "#aa8820";
-		this.density = 3;
-	}
-}
-
-class Sand extends Converter {
-	constructor(x, y) {
-		super(x, y, "water-spout", "sand");
-		this.id = "sand";
-		this.color = "#eecc80";
-		this.gravity = true;
-		this.density = 2;
-	}
-}
-
-class Water extends Converter {
-	constructor(x, y) {
-		super(x, y, "sand-spout", "water");
-		this.id = "water";
-		this.color = "#2020fe";
-		this.gravity = true;
-		this.density = 1;
 	}
 }
 
 class Plant extends Converter {
 	constructor(x, y) {
-		super(x, y, "water", "plant");
+		super(x, y, {"water": "plant"});
 		this.id = "plant";
 		this.color = "#20cc20";
-		this.density = 3;
 	}
 }
 
-class SandSpout extends Converter {
+class OilSpout extends Converter {
 	constructor(x, y) {
-		super(x, y, "air", "sand");
-		this.id = "sand-spout";
-		this.color = "#edb744";
-		this.density = 3;
+		super(x, y, {"air": "oil"});
+		this.id = "oil-spout";
+		this.color = "#cc6666";
 	}
 }
 
 class WaterSpout extends Converter {
 	constructor(x, y) {
-		super(x, y, "air", "water");
+		super(x, y, {"air": "water"});
 		this.id = "water-spout";
 		this.color = "#70a0ff";
-		this.density = 3;
 	}
 }
 
@@ -333,11 +334,12 @@ class CellFactory {
 	static create(x, y, id) {
 		switch(id) {
 			case "air": return new Air(x, y);
-			case "ground": return new Ground(x, y);
-			case "sand": return new Sand(x, y);
+			case "oil": return new Oil(x, y);
 			case "water": return new Water(x, y);
+			case "sand": return new Sand(x, y);
+			case "ground": return new Ground(x, y);
 			case "plant": return new Plant(x, y);
-			case "sand-spout": return new SandSpout(x, y);
+			case "oil-spout": return new OilSpout(x, y);
 			case "water-spout": return new WaterSpout(x, y);
 			default: return null;
 		}
