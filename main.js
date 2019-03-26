@@ -1,174 +1,164 @@
-"use strict";
+import * as Cells from './Cells.js';
+import Game from './Game.js';
+import Grid from './Grid.js';
+import Pen from './Pen.js';
 
-/* TODO:
-	add more cell types
-*/
+// TODO: fix cell movements, try to eliminate mutable/cloned objects in grid
+//	string/int storage is best
 
-let game;
+const lerp = (x, x1, x2, y1, y2) => y1 + (x - x1) / (x2 - x1) * (y2 - y1);
+const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
+
+// TODO:
+//	try to break up this file
+//	check for other places that Cells should be used
 
 // setup
-window.addEventListener("load", (event) => {
-	const canvas = document.getElementById("game");
-	const ctx = canvas.getContext("2d");
+window.addEventListener('DOMContentLoaded', (event) => {
+	const canvas = document.getElementById('game');
+	const ctx = canvas.getContext('2d');
 	const pen = new Pen();
-	const grid = new Grid(canvas.width / Cell.SIZE, canvas.height / Cell.SIZE);
+	const grid = new Grid(canvas.width / Cells.SIZE, canvas.height / Cells.SIZE);
 
 	// init
 	resetGrid(grid);
-	game = new Game({canvas, ctx, pen, grid});
+	const game = new Game({canvas, ctx, pen, grid});
 
 	// event listeners
-	attatchHandlers();
+	attatchHandlers(game);
 
 	// begin
 	game.resume();
 });
 
-function attatchHandlers() {
+function attatchHandlers(game) {
 	const {canvas, pen, grid} = game.state;
 
 	// helper
+	const cache = {
+		bcr: null,
+		sideWidth: null,
+		style: window.getComputedStyle(canvas)
+	};
+	const clearCache = () => {
+		cache.bcr = null;
+		cache.sideWidth = null;
+	};
 	const translateCoords = ({clientX, clientY}) => {
 		// translate coords in viewport to translated, scaled, clipped coords of grid
-		const bcr = canvas.getBoundingClientRect();
-		const sideWidth = ["top", "right", "bottom", "left"].reduce((sum, side) => {
-			sum[side] = Object.values($(canvas).css([
-				`border-${side}-width`,
-				`padding-${side}`
-			])).reduce((a, b) => a + parseFloat(b), 0);
-			return sum;
-		}, {});
+		if(!cache.bcr) cache.bcr = canvas.getBoundingClientRect();
+		if(!cache.sideWidth) {
+			cache.sideWidth = ['top', 'right', 'bottom', 'left'].reduce((sum, side) => {
+				const borderWidth = parseFloat(cache.style[`border-${side}-width`]);
+				const padding = parseFloat(cache.style[`padding-${side}`]);
+				sum[side] = borderWidth + padding;
+				return sum;
+			}, {});
+		}
+
+		const {bcr, sideWidth} = cache;
 		const scaleX = grid.width / (bcr.width - (sideWidth.left + sideWidth.right));
 		const scaleY = grid.height / (bcr.height - (sideWidth.top + sideWidth.bottom));
 		const x = clamp((clientX - (bcr.left + sideWidth.left)) * scaleX, 0, grid.width);
 		const y = clamp((clientY - (bcr.top + sideWidth.top)) * scaleY, 0, grid.height);
 
-		return {x, y};
+		return [x, y];
 	};
 
+	// clear cache
+	window.addEventListener('resize', clearCache);
+	window.addEventListener('scroll', clearCache);
+
 	// pen events
-	canvas.addEventListener("mousedown", (event) => {
+	canvas.addEventListener('mousedown', (event) => {
 		event.preventDefault();
-		const {x, y} = translateCoords(event);
-		pen.down(x, y);
+		pen.down(...translateCoords(event));
 	});
 
-	document.addEventListener("mousemove", (event) => {
-		const {x, y} = translateCoords(event);
-		pen.move(x, y);
+	document.addEventListener('mousemove', (event) => {
+		if(!pen.isDown) return;
+		pen.move(...translateCoords(event));
 	});
 
-	document.addEventListener("mouseup", (event) => {
-		const {x, y} = translateCoords(event);
-		pen.up(x, y);
+	document.addEventListener('mouseup', (event) => {
+		pen.up(...translateCoords(event));
 	});
 
-	canvas.addEventListener("touchstart", (event) => {
+	canvas.addEventListener('touchstart', (event) => {
 		event.preventDefault();
-
-		if(pen.isDown) {
-			return;
-		}
+		if(pen.isDown) return;
 
 		const [touch] = event.changedTouches;
-		const {x, y} = translateCoords(touch);
 
 		pen.touchId = touch.identifier;
-		pen.down(x, y);
+		pen.down(...translateCoords(touch));
 	});
 
-	canvas.addEventListener("touchmove", (event) => {
+	canvas.addEventListener('touchmove', (event) => {
 		event.preventDefault();
-
+		if(!pen.isDown) return;
 		const touch = getTouch(pen.touchId, event.changedTouches);
-
-		if(!pen.isDown || touch == null) {
-			return;
-		}
-
-		const {x, y} = translateCoords(touch);
-		pen.move(x, y);
+		if(touch != null) pen.move(...translateCoords(touch));
 	});
 
-	canvas.addEventListener("touchend", (event) => {
+	canvas.addEventListener('touchend', (event) => {
 		event.preventDefault();
-
 		const touch = getTouch(pen.touchId, event.changedTouches);
-
-		if(!pen.isDown || touch == null) {
-			return;
-		}
-
-		const {x, y} = translateCoords(touch);
-		pen.up(x, y);
+		if(pen.isDown && touch != null) pen.up(...translateCoords(touch));
 	});
 
 	// ui events
-	const speedTag = document.getElementById("speed");
-	speedTag.addEventListener("change", (event) => {
+	const speedTag = document.getElementById('speed');
+	speedTag.addEventListener('change', (event) => {
 		game.setTPS(parseFloat(speedTag.value));
 	});
 
-	const radiusTag = document.getElementById("radius");
-	$(radiusTag).popover({
-		content: pen.radius,
-		placement: "auto bottom",
-		trigger: "hover"
-	});
-	radiusTag.addEventListener("input", (event) => {
+	const radiusTag = document.getElementById('radius');
+	radiusTag.addEventListener('input', (event) => {
 		pen.radius = parseInt(radiusTag.value);
-		radiusTag.setAttribute("data-content", pen.radius);
-		$(radiusTag).popover("show");
+		document.getElementById('radius-value').textContent = pen.radius;
 	});
 
-	const penTag = document.getElementById("pen");
-	penTag.addEventListener("change", (event) => {
+	const penTag = document.getElementById('pen');
+	penTag.addEventListener('change', (event) => {
 		pen.currentId = penTag.value;
 	});
 
-	const formTag = document.getElementById("controls");
-	formTag.addEventListener("reset", (event) => {
+	const formTag = document.getElementById('controls');
+	formTag.addEventListener('reset', (event) => {
 		game.setTPS(30);
 		pen.reset();
-		radiusTag.setAttribute("data-content", pen.radius);
 		resetGrid(grid);
 	});
 
 	// game events
-	game.addEventListener("draw", draw);
-	game.addEventListener("tick", tick);
+	game.addEventListener('draw', draw);
+	game.addEventListener('tick', tick);
 }
 
 function draw(event) {
 	const {dt} = event.detail;
 	const {canvas, ctx, pen, grid} = this.state;
-	const bgColor = "#000000";
 
 	// reset canvas
-	ctx.fillStyle = bgColor;
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	// reset edges
 	for(let y = 0; y < grid.height; y++) {
-		grid.set(0, y, new Ground(0, y));
-		grid.set(grid.width - 1, y, new Ground(grid.width - 1, y));
+		grid.get(0, y).id = 'ground';
+		grid.get(grid.width - 1, y).id = 'ground';
 	}
 
 	// pen
 	if(pen.isDown) {
 		pen.stroke(grid);
 	}
-	pen.setPrevious(pen.x, pen.y);
 
 	// draw cells
-	for(const cell of grid) {
-		if(cell.color == bgColor) {
-			continue;
-		}
-
-		ctx.fillStyle = cell.color;
-		ctx.fillRect(Cell.SIZE * cell.x, Cell.SIZE * cell.y, Cell.SIZE, Cell.SIZE);
-	}
+	grid.forEach((cell, [x, y]) => {
+		ctx.fillStyle = Cells.data[cell.id].color;
+		ctx.fillRect(Cells.SIZE * x, Cells.SIZE * y, Cells.SIZE, Cells.SIZE);
+	});
 }
 
 function tick(event) {
@@ -177,112 +167,112 @@ function tick(event) {
 	const visited = new Set();
 
 	// movement
-	let x = 0;
+	// TODO: verify identical movement algorithm from before
 	let dx = 1;
 	for(let y = 0; y < grid.height; y++) {
-		while(x >=0 && x < grid.width) {
+		for(const x of range(0, grid.width - 1, dx)) {
 			const cell = grid.get(x, y);
 
-			if(!visited.has(cell) && cell.hasGravity) {
-				// strafe
-				moveSide(cell, grid, visited);
-				// fall
-				moveDown(cell, grid, visited);
-			}
-
-			x += dx;
+			if(visited.has(cell)) continue;
+			if(!Cells.data[cell.id].hasGravity) continue;
+			if(Cells.data[cell.id].density == 0) continue;
+			// strafe/fall
+			const [sideX, sideY] = moveSide(x, y, grid, visited);
+			moveDown(sideX, sideY, grid, visited);
 		}
-
-		x -= dx;
 		dx *= -1;
 	}
 
 	visited.clear();
 
 	// spreading
-	grid.forEach((cell, [x, y]) => {
-		if(!visited.has(cell) && cell instanceof Converter) {
-			for(let h = -1; h <= 1; h++) {
-				for(let k = -1; k <= 1; k++) {
-					if(grid.hasPoint(x + h, y + k) && (h == 0 || k == 0) && h != k && Math.random() < Converter.SPREAD_FACTOR) {
-						const resultCell = cell.convert(grid.get(x + h, y + k));
-						grid.set(x + h, y + k, resultCell);
-						visited.add(resultCell);
-					}
-				}
-			}
+	grid.forEach((cell1, [x1, y1]) => {
+		if(visited.has(cell1)) return;
+		if(!Cells.data[cell1.id].hasOwnProperty('conversions')) return;
+
+		for(const [cell2, [x2, y2]] of grid.neighborEntries(x1, y1)) {
+			// not diagonal neighbors
+			if(Math.abs(x1 - x2) + Math.abs(y1 - y2) != 1) continue;
+			if(Math.random() >= Cells.SPREAD_RATE) continue;
+
+			Cells.convert(cell1, cell2);
+			visited.add(cell2);
 		}
 	});
 }
 
 // helper functions
 function getOrMakeCell(x, y, grid) {
-	return grid.hasPoint(x, y) ? grid.get(x, y) : new Air(x, y);
+	return grid.validKey(x, y) ? grid.get(x, y) : Cells.create('air');
 }
 
-function moveSide(cell, grid, visited) {
-	const cellBelow = getOrMakeCell(cell.x, cell.y + 1, grid);
+function moveSide(x, y, grid, visited) {
+	const cell = grid.get(x, y);
+	const cellBelow = getOrMakeCell(x, y + 1, grid);
 
+	// TODO: consider refactoring
 	for(let i = 0; i < 2; i++) {
-		const cellAside = getOrMakeCell(cell.x + cell.dir, cell.y, grid);
-		const cellOtherSide = getOrMakeCell(cell.x - cell.dir, cell.y, grid);
+		const cellAside = getOrMakeCell(x + cell.dir, y, grid);
+		const cellOtherSide = getOrMakeCell(x - cell.dir, y, grid);
+		const cellCanPhase = Cells.canPhase.bind(null, cell);
 
-		if(!visited.has(cellAside) && cell.canPhaseThrough(cellAside) && (!cell.canPhaseThrough(cellOtherSide) || !cell.canPhaseThrough(cellBelow))) {
-			grid.set(cell.x, cell.y, cellAside);
-			grid.set(cellAside.x, cellAside.y, cell);
-			cellAside.x -= cell.dir;
-			cell.x += cell.dir;
-			visited.add(cellAside);
-			visited.add(cell);
-
-			return true;
-		} else {
+		if(visited.has(cellAside) ||
+			!cellCanPhase(cellAside) ||
+			cellCanPhase(cellOtherSide) &&
+			cellCanPhase(cellBelow)
+		) {
 			cell.dir *= -1;
+			continue;
 		}
-	}
 
-	return false;
-}
-
-function moveDown(cell, grid, visited) {
-	const cellBelow = getOrMakeCell(cell.x, cell.y + 1, grid);
-
-	if(!visited.has(cellBelow) && cell.canPhaseThrough(cellBelow)) {
-		grid.set(cell.x, cell.y, cellBelow);
-		grid.set(cellBelow.x, cellBelow.y, cell);
-		cellBelow.y--;
-		cell.y++;
-		visited.add(cellBelow);
+		// swap cells
+		grid.set(x, y, cellAside);
+		grid.set(x + cell.dir, y, cell);
+		// mark visited
+		visited.add(cellAside);
 		visited.add(cell);
 
-		return true;
+		return [x + cell.dir, y];
 	}
 
-	return false;
+	return [x, y];
 }
 
-function map(val, a1, a2, b1, b2) {
-    return (val - a1) / (a2 - a1) * (b2 - b1) + b1;
-}
+function moveDown(x, y, grid, visited) {
+	const cell = grid.get(x, y);
+	const cellBelow = getOrMakeCell(x, y + 1, grid);
 
-function clamp(value, min, max) {
-	return Math.max(min, Math.min(value, max));
+	if(visited.has(cellBelow)) return [x, y];
+	if(!Cells.canPhase(cell, cellBelow)) return [x, y];
+
+	// swap cells
+	grid.set(x, y, cellBelow);
+	grid.set(x, y + 1, cell);
+	// mark visited
+	visited.add(cellBelow);
+	visited.add(cell);
+
+	return [x, y + 1];
 }
 
 function resetGrid(grid) {
-	grid.forEach((v, [x, y]) => {
-		grid.set(x, y, new Air(x, y));
+	grid.forEach((cell, [x, y]) => {
+		grid.set(x, y, Cells.create('air'));
 	});
 }
 
 function getTouch(id, touchList) {
-	for(let i = 0; i < touchList.length; i++) {
-		const touch = touchList.item(i);
+	return Array.from(touchList).find(touch => touch.identifier == id);
+}
 
-		if(touch.identifier == id) {
-			return touch;
-		}
+function* range(start, end, step) {
+	if(end === undefined) [start, end] = [0, start];
+	if(step === undefined) step = Math.sign(end - start);
+	if(step == 0) return;
+
+	if(Math.sign(end - start) != Math.sign(step)) [start, end] = [end, start];
+
+	for(let i = start; Math.sign(i - end) != Math.sign(step); i += step) {
+		yield i;
 	}
-
-	return null;
 }
