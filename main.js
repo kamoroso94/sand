@@ -81,7 +81,7 @@ function attatchHandlers(game) {
 	});
 
 	document.addEventListener('mouseup', (event) => {
-		pen.up(...translateCoords(event));
+		pen.up(...translateCoords(event), event.target != canvas);
 	});
 
 	canvas.addEventListener('touchstart', (event) => {
@@ -150,9 +150,7 @@ function draw(event) {
 	}
 
 	// pen
-	if(pen.isDown) {
-		pen.stroke(grid);
-	}
+	pen.stroke(grid);
 
 	// draw cells
 	grid.forEach((cell, [x, y]) => {

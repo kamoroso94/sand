@@ -1,7 +1,7 @@
 import { fillPolygon, fillCircle } from './graphics.js';
 import { create as createCell } from './Cells.js';
 
-const Log = (...args) => console.log.apply(console, args.map(x=>JSON.stringify(x)));
+const Log = (...args) => console.log(...args.map(x=>JSON.stringify(x)));
 
 function getPath([prevX, prevY], [x, y], width) {
 	const dx = x - prevX;
@@ -43,7 +43,7 @@ export default class Pen {
 	reset() {
 		this.paths = [];
 		this.path = [];
-		this.startPos = null;
+		this.lastPos = null;
 		this.isDown = false;
 		this.touchId = -1;
 		this.currentId = 'ground';
@@ -51,61 +51,52 @@ export default class Pen {
 	}
 
 	down(x, y) {
-		const id = Math.floor(Math.random() * 0x10000).toString(16).padStart(4, 0);
-		Log('down.start+'+id, this.paths, this.path, this.startPos);
 		this.isDown = true;
 		this.move(x, y);
-		this.paths.push(this.path);
-		Log('down.end+'+id, this.paths, this.path, this.startPos);
+		this.move(x, y);
 	}
 
 	move(x, y) {
-		if(!this.isDown) return;
-		const id = Math.floor(Math.random() * 0x10000).toString(16).padStart(4, 0);
-		Log('move.start+'+id, this.paths, this.path, this.startPos);
 		this.path.push([x, y]);
-		Log('move.end+'+id, this.paths, this.path, this.startPos);
 	}
 
-	up(x, y) {
-		const id = Math.floor(Math.random() * 0x10000).toString(16).padStart(4, 0);
-		Log('up.start+'+id, this.paths, this.path, this.startPos);
-		this.path = [];
+	up(x, y, offCanvas = false) {
 		this.isDown = false;
-		if(this.paths.length == 0) this.startPos = null;
-		Log('up.end+'+id, this.paths, this.path, this.startPos);
+		if (!offCanvas) {
+			this.path.push([x, y]);
+		}
+		if (this.path.length > 1) {
+			this.paths.push(this.path);
+		}
+		this.path = [];
 	}
 
 	stroke(grid) {
-		const id = Math.floor(Math.random() * 0x10000).toString(16).padStart(4, 0);
-		Log('stroke.start+'+id, this.paths, this.path, this.startPos);
 		// helper
 		const setPixel = (x, y) => {
 			if(!grid.validKey(x, y)) return;
 			grid.set(x, y, createCell(this.currentId, grid.get(x, y)));
 		};
 
-		let prevPos = this.startPos;
-		for(const path of this.paths) {
-			for(const pos of path) {
-				// draw stroke path
-				if(prevPos != null) {
-					fillPolygon(getPath(prevPos, pos, this.radius), setPixel);
-				}
-
-				// draw pen endpoint
-				fillCircle(...pos, this.radius, setPixel);
-
-				prevPos = pos;
+		if (this.path.length > 1) {
+			this.paths.push(this.path);
+			if (this.isDown) {
+				this.path = [this.path[this.path.length - 1].slice()];
+			} else {
+				this.path = [];
 			}
 		}
 
-		this.startPos = null;
-		if(this.isDown) {
-			this.startPos = this.path.pop();
+		// let prevPos = this.startPos;
+		for(const path of this.paths) {
+			fillCircle(...path[0], this.radius, setPixel);
+			for(let i = 0; i + 1 < path.length; ++i) {
+				let startPos = path[i];
+				let endPos = path[i + 1];
+				fillPolygon(getPath(startPos, endPos, this.radius), setPixel);
+			}
+			fillCircle(...path[path.length - 1], this.radius, setPixel);
 		}
-		this.path = [];
 		this.paths = [];
-		Log('stroke.end+'+id, this.paths, this.path, this.startPos);
 	}
 }
