@@ -2,6 +2,7 @@ import * as Cells from './Cells.js';
 import Game from './Game.js';
 import Grid from './Grid.js';
 import Pen from './Pen.js';
+import TileBuffer from './TileBuffer.js';
 
 // TODO: fix cell movements, try to eliminate mutable/cloned objects in grid
 //	string/int storage is best
@@ -18,11 +19,15 @@ window.addEventListener('DOMContentLoaded', (event) => {
 	const canvas = document.getElementById('game');
 	const ctx = canvas.getContext('2d');
 	const pen = new Pen();
-	const grid = new Grid(canvas.width / Cells.SIZE, canvas.height / Cells.SIZE);
+	const [w, h] = [canvas.width / Cells.SIZE, canvas.height / Cells.SIZE];
+	const grid = new Grid(w, h);
+	const tileBuffer = new TileBuffer(w, h);
 
 	// init
 	resetGrid(grid);
-	const game = new Game({canvas, ctx, pen, grid});
+	const game = new Game({canvas, ctx, pen, grid, tileBuffer});
+	ctx.fillStyle = "#000";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 	// event listeners
 	attatchHandlers(game);
@@ -138,10 +143,10 @@ function attatchHandlers(game) {
 
 function draw(event) {
 	const {dt} = event.detail;
-	const {canvas, ctx, pen, grid} = this.state;
+	const {canvas, ctx, pen, grid, tileBuffer} = this.state;
 
 	// reset canvas
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	// ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	// reset edges
 	for(let y = 0; y < grid.height; y++) {
@@ -152,16 +157,26 @@ function draw(event) {
 	// pen
 	pen.stroke(grid);
 
+	for(let y = 0; y < grid.height; y++) {
+		for(let x = 0; x < grid.width; x++) {
+			const cell = grid.array[x + y * grid.width];
+			if (!cell) continue;
+
+			tileBuffer.assign([x, y], Cells.data[cell.id].color);
+		}
+	}
+
 	// draw cells
-	grid.forEach((cell, [x, y]) => {
-		ctx.fillStyle = Cells.data[cell.id].color;
+	tileBuffer.forEachChange(([x, y], color) => {
+		ctx.fillStyle = color;
 		ctx.fillRect(Cells.SIZE * x, Cells.SIZE * y, Cells.SIZE, Cells.SIZE);
 	});
+	tileBuffer.swap();
 }
 
 function tick(event) {
 	const {dt} = event.detail;
-	const {canvas, ctx, pen, grid} = this.state;
+	const {canvas, ctx, pen, grid, tileBuffer} = this.state;
 	const visited = new Set();
 
 	// movement
@@ -184,19 +199,24 @@ function tick(event) {
 	visited.clear();
 
 	// spreading
-	grid.forEach((cell1, [x1, y1]) => {
-		if(visited.has(cell1)) return;
-		if(!Cells.data[cell1.id].hasOwnProperty('conversions')) return;
+	for(let y1 = 0; y1 < grid.height; y1++) {
+		for(let x1 = 0; x1 < grid.width; x1++) {
+			const cell1 = grid.array[x1 + y1 * grid.width];
+			if (!cell1) continue;
 
-		for(const [cell2, [x2, y2]] of grid.neighborEntries(x1, y1)) {
-			// not diagonal neighbors
-			if(Math.abs(x1 - x2) + Math.abs(y1 - y2) != 1) continue;
-			if(Math.random() >= Cells.SPREAD_RATE) continue;
+			if(visited.has(cell1)) continue;
+			if(!Cells.data[cell1.id].hasOwnProperty('conversions')) continue;
 
-			Cells.convert(cell1, cell2);
-			visited.add(cell2);
+			for(const [cell2, [x2, y2]] of grid.neighborEntries(x1, y1)) {
+				// not diagonal neighbors
+				if(Math.abs(x1 - x2) + Math.abs(y1 - y2) != 1) continue;
+				if(Math.random() >= Cells.SPREAD_RATE) continue;
+
+				Cells.convert(cell1, cell2);
+				visited.add(cell2);
+			}
 		}
-	});
+	}
 }
 
 // helper functions
