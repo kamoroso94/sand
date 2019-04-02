@@ -1,5 +1,5 @@
 // TODO:
-//	add more cell types
+//  add more cell types
 //  hasGravity for air is weird
 //  figure out what to do about dir
 export const SIZE = 4;
@@ -63,22 +63,22 @@ export const data = {
 };
 
 export function canPhase(self, other) {
-	if(self == null || other == null) return false;
-	const selfData = data[self.id];
-	const otherData = data[other.id];
-	return selfData.hasGravity && otherData.hasGravity && selfData.density > otherData.density;
+  if(self == null || other == null) return false;
+  const selfData = data[self.id];
+  const otherData = data[other.id];
+  return selfData.hasGravity && otherData.hasGravity && selfData.density > otherData.density;
 }
 
 export function convert(self, other) {
-	if(self == null || other == null) return false;
+  if(self == null || other == null) return false;
 
-	const selfData = data[self.id];
-	const otherData = data[other.id];
-	if(!selfData.hasOwnProperty('conversions')) return false;
-	if(!selfData.conversions.hasOwnProperty(other.id)) return false;
+  const selfData = data[self.id];
+  const otherData = data[other.id];
+  if(!selfData.hasOwnProperty('conversions')) return false;
+  if(!selfData.conversions.hasOwnProperty(other.id)) return false;
 
-	other.id = selfData.conversions[other.id];
-	return true;
+  other.id = selfData.conversions[other.id];
+  return true;
 }
 
 export function create(id, obj={}) {

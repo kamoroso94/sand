@@ -1,104 +1,104 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>Sand Game</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <title>Sand Game</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-		<!-- SEO -->
-		<meta name="application-name" content="Sand Game" />
-		<meta name="author" content="Kyle Amoroso" />
-		<meta name="description" content="A sand-box game that lets you play with different elements" />
-		<meta name="keywords" content="sand,sand-box,game,html5" />
-		<meta name="version" content="1.3" />
-		<meta property="og:title" content="Sand Game" />
-		<meta property="og:type" content="website" />
-		<meta property="og:url" content="https://kamoroso94.github.io/sand/" />
-		<meta property="og:image" content="https://kamoroso94.github.io/sand/images/splash.png" />
-		<meta property="og:description" content="A sand-box game that lets you play with different elements" />
+    <!-- SEO -->
+    <meta name="application-name" content="Sand Game" />
+    <meta name="author" content="Kyle Amoroso" />
+    <meta name="description" content="A sand-box game that lets you play with different elements" />
+    <meta name="keywords" content="sand,sand-box,game,html5" />
+    <meta name="version" content="1.3" />
+    <meta property="og:title" content="Sand Game" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://kamoroso94.github.io/sand/" />
+    <meta property="og:image" content="https://kamoroso94.github.io/sand/images/splash.png" />
+    <meta property="og:description" content="A sand-box game that lets you play with different elements" />
 
-		<!-- Favicons -->
-		<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
-		<link rel="icon" type="image/png" href="icons/favicon-16.png" />
-		<link rel="icon" type="image/png" href="icons/favicon-32.png" />
-		<link rel="icon" type="image/png" href="icons/favicon-64.png" />
-		<link rel="icon" type="image/png" href="icons/favicon-128.png" />
+    <!-- Favicons -->
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" href="icons/favicon-16.png" />
+    <link rel="icon" type="image/png" href="icons/favicon-32.png" />
+    <link rel="icon" type="image/png" href="icons/favicon-64.png" />
+    <link rel="icon" type="image/png" href="icons/favicon-128.png" />
 
-		<!-- Bootstrap CSS -->
-		<link
-			rel="stylesheet"
-			href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-			integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-			crossorigin="anonymous"
-		/>
+    <!-- Bootstrap CSS -->
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
 
-		<!-- Custom -->
-		<link rel="stylesheet" href="style.css" />
-		<script type="module" src="main.js"></script>
-	</head>
+    <!-- Custom -->
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" src="main.js"></script>
+  </head>
 
-	<body>
-		<div class="container">
-			<h1>Sand Game</h1>
-			<p class="lead">A sand-box game that lets you play with different elements</p>
+  <body>
+    <div class="container">
+      <h1>Sand Game</h1>
+      <p class="lead">A sand-box game that lets you play with different elements</p>
 
-			<div id="game-wrapper">
-				<canvas width="640" height="480" class="img-thumbnail noscript" id="game"></canvas>
-				<script>document.getElementById('game').classList.remove('noscript');</script>
+      <div id="game-wrapper">
+        <canvas width="640" height="480" class="img-thumbnail noscript" id="game"></canvas>
+        <script>document.getElementById('game').classList.remove('noscript');</script>
 
-				<form id="controls">
-					<div class="form-row">
-						<div class="form-group col-md-4">
-							<label for="speed">Speed:</label>
-							<select class="custom-select" id="speed">
-								<option value="0">Pause</option>
-								<option value="7.5">25%</option>
-								<option value="15">50%</option>
-								<option value="30" selected>100%</option>
-								<option value="45">150%</option>
-								<option value="60">200%</option>
-							</select>
-						</div>
+        <form id="controls">
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label for="speed">Speed:</label>
+              <select class="custom-select" id="speed">
+                <option value="0">Pause</option>
+                <option value="7.5">25%</option>
+                <option value="15">50%</option>
+                <option value="30" selected>100%</option>
+                <option value="45">150%</option>
+                <option value="60">200%</option>
+              </select>
+            </div>
 
-						<div class="form-group col-md-4">
-							<label for="radius">Pen Radius:</label>
-							<span id="radius-value">5</span>
-							<input
-								type="range"
-								class="custom-range"
-								id="radius"
-								value="5"
-								min="1"
-								max="10"
-								step="1" />
-						</div>
+            <div class="form-group col-md-4">
+              <label for="radius">Pen Radius:</label>
+              <span id="radius-value">5</span>
+              <input
+                type="range"
+                class="custom-range"
+                id="radius"
+                value="5"
+                min="1"
+                max="10"
+                step="1" />
+            </div>
 
-						<div class="form-group col-md-4">
-							<label for="pen">Pen Type:</label>
-							<select class="custom-select" id="pen">
-								<option value="air">Erase</option>
-								<option value="oil">Oil</option>
-								<option value="water">Water</option>
-								<option value="sand">Sand</option>
-								<option value="ground" selected>Ground</option>
-								<option value="plant">Plant</option>
-								<option value="oil-spout">Oil Spout</option>
-								<option value="water-spout">Water Spout</option>
-							</select>
-						</div>
-					</div>
+            <div class="form-group col-md-4">
+              <label for="pen">Pen Type:</label>
+              <select class="custom-select" id="pen">
+                <option value="air">Erase</option>
+                <option value="oil">Oil</option>
+                <option value="water">Water</option>
+                <option value="sand">Sand</option>
+                <option value="ground" selected>Ground</option>
+                <option value="plant">Plant</option>
+                <option value="oil-spout">Oil Spout</option>
+                <option value="water-spout">Water Spout</option>
+              </select>
+            </div>
+          </div>
 
-					<div class="form-row">
-						<div class="form-group col-md-12">
-							<button type="reset" class="btn btn-primary">Clear</button>
-						</div>
-					</div>
-				</form>
-			</div>
+          <div class="form-row">
+            <div class="form-group col-md-12">
+              <button type="reset" class="btn btn-primary">Clear</button>
+            </div>
+          </div>
+        </form>
+      </div>
 
-			<footer>
-				<p class="small">Made by Kyle Amoroso in 2017.</p>
-			</footer>
-		</div>
-	</body>
+      <footer>
+        <p class="small">Made by Kyle Amoroso in 2017.</p>
+      </footer>
+    </div>
+  </body>
 </html>
