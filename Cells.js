@@ -1,7 +1,6 @@
 // TODO:
 //  add more cell types
 //  hasGravity for air is weird
-//  figure out what to do about dir
 export const SIZE = 4;
 export const SPREAD_RATE = 1/16;
 

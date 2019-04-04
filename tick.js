@@ -7,7 +7,6 @@ export default function tick(event) {
   const visited = new Set();
 
   // movement
-  // TODO: verify identical movement algorithm from before
   let dx = 1;
   for(let y = 0; y < grid.height; y++) {
     for(const x of range(0, grid.width - 1, dx)) {

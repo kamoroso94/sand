@@ -6,10 +6,7 @@ import draw from './draw.js';
 import tick from './tick.js';
 import { clamp, getTouch, lerp, range, resetGrid } from './util.js';
 
-// TODO: try to eliminate mutable/cloned objects in grid,
-//  string/int storage is best
-
-// TODO: try to break up this file
+// TODO: make grid Uint8Array {7[dir] 6-0[id]}
 
 // setup
 window.addEventListener('DOMContentLoaded', (event) => {

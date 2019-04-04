@@ -37,7 +37,6 @@ export default class Grid {
 
   set(x, y, value) {
     if(!this.validKey(x, y)) return false;
-    if(!value) console.warn(this, x, y, value);  // TODO: remove post-debug
     this.array[x + y * this.width] = value;
     return true;
   }
