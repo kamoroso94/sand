@@ -42,10 +42,18 @@
       <h1>Sand Game</h1>
       <p class="lead">A sand-box game that lets you play with different elements</p>
 
-      <div id="game-wrapper">
+      <div class="d-inline-block">
         <div class="img-thumbnail">
-          <canvas width="640" height="480" class="noscript" id="game"></canvas>
-          <script>document.getElementById('game').classList.remove('noscript');</script>
+          <canvas
+            width="640"
+            height="480"
+            class="img-fluid align-middle noscript"
+            id="game">
+          </canvas>
+          <script>
+            document.getElementById('game').classList.remove('noscript');
+            document.currentScript.remove();
+          </script>
         </div>
 
         <form id="controls">
@@ -63,8 +71,10 @@
             </div>
 
             <div class="form-group col-md-4">
-              <label for="radius">Pen Radius:</label>
-              <span id="radius-value">5</span>
+              <label for="radius">
+                Pen Radius:
+                <span id="radius-value">5</span>
+              </label>
               <input
                 type="range"
                 class="custom-range"
