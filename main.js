@@ -32,30 +32,18 @@ function attatchHandlers(game) {
   // helper
   const cache = {
     bcr: null,
-    sideWidth: null,
     style: window.getComputedStyle(canvas)
   };
-  const clearCache = () => {
-    cache.bcr = null;
-    cache.sideWidth = null;
-  };
+  const clearCache = () => { cache.bcr = null; };
   const translateCoords = ({clientX, clientY}) => {
     // translate coords in viewport to translated, scaled, clipped coords of grid
     if(!cache.bcr) cache.bcr = canvas.getBoundingClientRect();
-    if(!cache.sideWidth) {
-      cache.sideWidth = ['top', 'right', 'bottom', 'left'].reduce((sum, side) => {
-        const borderWidth = parseFloat(cache.style[`border-${side}-width`]);
-        const padding = parseFloat(cache.style[`padding-${side}`]);
-        sum[side] = borderWidth + padding;
-        return sum;
-      }, {});
-    }
 
-    const {bcr, sideWidth} = cache;
-    const scaleX = grid.width / (bcr.width - (sideWidth.left + sideWidth.right));
-    const scaleY = grid.height / (bcr.height - (sideWidth.top + sideWidth.bottom));
-    const x = clamp((clientX - (bcr.left + sideWidth.left)) * scaleX, 0, grid.width);
-    const y = clamp((clientY - (bcr.top + sideWidth.top)) * scaleY, 0, grid.height);
+    const { bcr } = cache;
+    const scaleX = grid.width / bcr.width;
+    const scaleY = grid.height / bcr.height;
+    const x = clamp((clientX - bcr.left) * scaleX, 0, grid.width);
+    const y = clamp((clientY - bcr.top) * scaleY, 0, grid.height);
 
     return [x, y];
   };
