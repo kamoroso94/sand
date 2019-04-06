@@ -54,6 +54,9 @@ function attatchHandlers(game) {
 
   // pen events
   canvas.addEventListener('mousedown', (event) => {
+    const RIGHT_BUTTON = 2;
+    if(event.button == RIGHT_BUTTON) return;
+
     event.preventDefault();
     pen.down(...translateCoords(event));
   });
