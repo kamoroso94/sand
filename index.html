@@ -10,7 +10,7 @@
     <meta name="author" content="Kyle Amoroso" />
     <meta name="description" content="A sand-box game that lets you play with different elements" />
     <meta name="keywords" content="sand,sand-box,game,html5" />
-    <meta name="version" content="1.3" />
+    <meta name="version" content="1.4" />
     <meta property="og:title" content="Sand Game" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://kamoroso94.github.io/sand/" />
@@ -43,8 +43,10 @@
       <p class="lead">A sand-box game that lets you play with different elements</p>
 
       <div id="game-wrapper">
-        <canvas width="640" height="480" class="img-thumbnail noscript" id="game"></canvas>
-        <script>document.getElementById('game').classList.remove('noscript');</script>
+        <div class="img-thumbnail">
+          <canvas width="640" height="480" class="noscript" id="game"></canvas>
+          <script>document.getElementById('game').classList.remove('noscript');</script>
+        </div>
 
         <form id="controls">
           <div class="form-row">
@@ -70,7 +72,8 @@
                 value="5"
                 min="1"
                 max="10"
-                step="1" />
+                step="1"
+              />
             </div>
 
             <div class="form-group col-md-4">
@@ -79,6 +82,7 @@
                 <option value="air">Erase</option>
                 <option value="oil">Oil</option>
                 <option value="water">Water</option>
+                <option value="salt">Salt</option>
                 <option value="sand">Sand</option>
                 <option value="ground" selected>Ground</option>
                 <option value="plant">Plant</option>
