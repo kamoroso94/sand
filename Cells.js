@@ -41,6 +41,7 @@ export const data = {
     "hasGravity": true
   },
   "sand": {
+    "color": "#eecc80",
     "conversions": {
       "oil-spout": {
         "other": "sand"
@@ -49,7 +50,6 @@ export const data = {
         "other": "sand"
       }
     },
-    "color": "#eecc80",
     "density": 4,
     "hasGravity": true
   },
@@ -73,12 +73,12 @@ export const data = {
     }
   },
   "water-spout": {
+    "color": "#70a0ff",
     "conversions": {
       "air": {
         "other": "water"
       }
-    },
-    "color": "#70a0ff"
+    }
   },
   "sand-spout": {
     "color": "#edb744",
