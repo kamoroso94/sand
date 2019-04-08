@@ -27,14 +27,19 @@ export default function tick(event) {
   // spreading
   grid.forEach((cell1, [x1, y1]) => {
     if(visited.has(cell1)) return;
-    if(!Cells.data[cell1.id].hasOwnProperty('conversions')) return;
+    const cell1Data = Cells.data[cell1.id];
+    if(!cell1Data.hasOwnProperty('conversions')) return;
 
     for(const [cell2, [x2, y2]] of grid.neighborEntries(x1, y1)) {
       // not diagonal neighbors
       if(Math.abs(x1 - x2) + Math.abs(y1 - y2) != 1) continue;
       if(Math.random() >= Cells.SPREAD_RATE) continue;
 
-      Cells.convert(cell1, cell2);
+      const conversion = cell1Data.conversions[cell2.id];
+      if (conversion) {
+        cell1.id = conversion.self;
+        cell2.id = conversion.other;
+      }
       visited.add(cell2);
     }
   });

@@ -90,26 +90,31 @@ export const data = {
   }
 };
 
+(function verifyCells(cells) {
+  for (const cellName in cells) {
+    const cell = cells[cellName];
+    if(!cell.hasOwnProperty('conversions')) continue;
+    const conversions = cell.conversions;
+    for (const conversionName in conversions) {
+      const conversion = conversions[conversionName];
+      if(!conversion.self) {
+        conversion.self = cellName;
+      }
+      for (const which of ['self', 'other']) {
+        const convertName = conversion[which];
+        if(!cells[convertName]) {
+          throw new Error(`Cell '${cellName}' references '${convertName}' which doesn't exist.`);
+        }
+      }
+    }
+  }
+})(data);
+
 export function canPhase(self, other) {
   if(self == null || other == null) return false;
   const selfData = data[self.id];
   const otherData = data[other.id];
   return selfData.hasGravity && otherData.hasGravity && selfData.density > otherData.density;
-}
-
-export function convert(self, other) {
-  if(self == null || other == null) return false;
-
-  const selfData = data[self.id];
-  if(!selfData.hasOwnProperty('conversions')) return false;
-  if(!selfData.conversions.hasOwnProperty(other.id)) return false;
-
-  const selfId = selfData.conversions[other.id].self;
-  const otherId = selfData.conversions[other.id].other;
-  if(selfId != null) self.id = selfId;
-  if(otherId != null) other.id = otherId;
-
-  return true;
 }
 
 export function create(id, obj={}) {
