@@ -10,7 +10,7 @@
     <meta name="author" content="Kyle Amoroso" />
     <meta name="description" content="A sand-box game that lets you play with different elements" />
     <meta name="keywords" content="sand,sand-box,game,html5" />
-    <meta name="version" content="1.4" />
+    <meta name="version" content="1.4.1" />
     <meta property="og:title" content="Sand Game" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://kamoroso94.github.io/sand/" />
@@ -34,7 +34,7 @@
 
     <!-- Custom -->
     <link rel="stylesheet" href="style.css" />
-    <script type="module" src="main.js"></script>
+    <script type="module" src="main.js" onerror="showError()"></script>
   </head>
 
   <body>
@@ -42,18 +42,30 @@
       <h1>Sand Game</h1>
       <p class="lead">A sand-box game that lets you play with different elements</p>
 
-      <div class="d-inline-block">
+      <div class="d-inline-block noscript" id="game-wrapper">
         <div class="img-thumbnail">
           <canvas
             width="640"
             height="480"
-            class="img-fluid align-middle noscript"
+            class="align-middle"
             id="game">
           </canvas>
+          <img
+            src="images/noscript.png"
+            alt="Something went horribly wrong!"
+            width="640"
+            height="480"
+            class="img-fluid"
+          />
           <script>
-            document.getElementById('game').classList.remove('noscript');
-            document.currentScript.remove();
+            // show error for old browsers i.e. IE.
+            var wrapper = document.getElementById('game-wrapper');
+            wrapper.className = wrapper.className.replace(/\bnoscript\b/, '');
+            function showError() {
+              wrapper.className += ' noscript';
+            }
           </script>
+          <script nomodule>showError()</script>
         </div>
 
         <form id="controls">

@@ -1,8 +1,22 @@
-canvas.noscript {
-  background-image: url("images/noscript.png");
-  background-size: contain;
-  background-origin: content-box;
-  background-repeat: no-repeat;
+#game-wrapper canvas {
+  max-width: 100%;
+  background-color: black;
+}
+
+#game-wrapper img {
+  display: none;
+}
+
+#game-wrapper.noscript canvas {
+  display: none;
+}
+
+#game-wrapper.noscript img {
+  display: inline-block;
+}
+
+#game-wrapper.noscript form {
+  display: none;
 }
 
 label {
