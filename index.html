@@ -33,6 +33,14 @@
     />
 
     <!-- Custom -->
+    <link
+      rel="prefetch"
+      href="materials.json"
+      as="fetch"
+      type="text/json"
+      crossorigin="anonymous"
+      onload="fetch('materials.json').then(res=>res.json()).then(obj=>window.materials=obj)"
+    >
     <link rel="stylesheet" href="style.css" />
     <script type="module" src="main.js" onerror="showError()"></script>
   </head>

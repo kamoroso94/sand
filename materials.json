@@ -1,0 +1,93 @@
+{
+  "air": {
+    "color": "#000000",
+    "density": 0,
+    "hasGravity": true
+  },
+  "oil": {
+    "color": "#804040",
+    "density": 1,
+    "hasGravity": true
+  },
+  "water": {
+    "color": "#2020fe",
+    "conversions": {
+      "sand-spout": {
+        "self": "water",
+        "other": "sand"
+      }
+    },
+    "density": 2,
+    "hasGravity": true
+  },
+  "saltwater": {
+    "color": "#4080ff",
+    "density": 3,
+    "hasGravity": true
+  },
+  "salt": {
+    "color": "#ffffff",
+    "conversions": {
+      "water": {
+        "self": "air",
+        "other": "saltwater"
+      }
+    },
+    "density": 4,
+    "hasGravity": true
+  },
+  "sand": {
+    "color": "#eecc80",
+    "conversions": {
+      "oil-spout": {
+        "self": "sand",
+        "other": "sand"
+      },
+      "water-spout": {
+        "self": "sand",
+        "other": "sand"
+      }
+    },
+    "density": 4,
+    "hasGravity": true
+  },
+  "ground": {
+    "color": "#aa8820"
+  },
+  "plant": {
+    "color": "#20cc20",
+    "conversions": {
+      "water": {
+        "self": "plant",
+        "other": "plant"
+      }
+    }
+  },
+  "oil-spout": {
+    "color": "#cc6666",
+    "conversions": {
+      "air": {
+        "self": "oil-spout",
+        "other": "oil"
+      }
+    }
+  },
+  "water-spout": {
+    "color": "#70a0ff",
+    "conversions": {
+      "air": {
+        "self": "water-spout",
+        "other": "water"
+      }
+    }
+  },
+  "sand-spout": {
+    "color": "#edb744",
+    "conversions": {
+      "air": {
+        "self": "sand-spout",
+        "other": "sand"
+      }
+    }
+  }
+}
